@@ -486,7 +486,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
           {/* Card 1: Vin d'Honneur */}
           <div className="bg-white p-5 rounded-2xl border border-[#3B6FA0]/20 shadow-2xs flex flex-col justify-between space-y-2">
             <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#13263B] block">
-              🍸 VIN D'HONNEUR (16H30)
+              🍸 VIN D'HONNEUR (17H30)
             </span>
             <div className="flex items-baseline justify-between">
               <span className="font-display text-3xl font-bold text-[#13263B]">

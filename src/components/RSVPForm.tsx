@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Search, User, Baby, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
+import { Check, X, Search, User, Baby, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
 import { GuestFamily, FamilyMember } from '../types';
 import { getStoredFamilies, saveRSVPToLocalStorage, getStoredRSVPs } from '../utils/rsvpStorage';
 
@@ -547,20 +547,23 @@ export default function RSVPForm() {
                     </div>
 
                     {/* Batch Actions */}
+                    {/* Batch Actions */}
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => batchSetAttendance(true)}
-                        className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors"
+                        className="px-3 py-1.5 bg-white hover:bg-[#FAF7F2] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
                       >
-                        ✓ Tout cocher présent
+                        <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                        <span>Tous présents</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => batchSetAttendance(false)}
-                        className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors"
+                        className="px-3 py-1.5 bg-white hover:bg-[#FAF7F2] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
                       >
-                        ✗ Tout décocher
+                        <X className="w-3.5 h-3.5 text-rose-500 stroke-[2.5]" />
+                        <span>Tous absents</span>
                       </button>
                     </div>
                   </div>
@@ -572,8 +575,8 @@ export default function RSVPForm() {
                         key={member.id}
                         className={`p-4 sm:p-5 rounded-2xl border transition-all ${
                           member.isAttending
-                            ? 'bg-white/90 backdrop-blur-sm border-[#3B6FA0]/30 shadow-sm'
-                            : 'bg-white/50 backdrop-blur-sm border-slate-200 opacity-70'
+                            ? 'bg-white/95 backdrop-blur-sm border-[#3B6FA0]/30 shadow-sm'
+                            : 'bg-[#FAF7F2]/70 backdrop-blur-sm border-slate-200 shadow-2xs'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
@@ -598,39 +601,74 @@ export default function RSVPForm() {
                             </div>
                           </div>
 
-                          {/* Explicit Attendance Buttons (Présent / Absent) */}
-                          <div className="flex items-center gap-1 bg-white/90 p-1 rounded-full border border-[#3B6FA0]/15 shadow-2xs">
+                          {/* Explicit Attendance Radio Buttons (Cercles à cocher Présent / Absent) */}
+                          <div
+                            role="radiogroup"
+                            aria-label={`Présence de ${member.firstName}`}
+                            className="flex items-center gap-2 bg-slate-50/80 p-1 rounded-2xl border border-slate-200/80"
+                          >
+                            {/* Option Présent(e) */}
                             <button
                               type="button"
+                              role="radio"
+                              aria-checked={member.isAttending}
                               onClick={() => setMemberAttendance(member.id, true)}
-                              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold font-sans tracking-wide transition-all cursor-pointer flex items-center gap-1 ${
+                              className={`group flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-sans transition-all cursor-pointer ${
                                 member.isAttending
-                                  ? 'bg-[#13263B] text-white shadow-2xs font-bold'
-                                  : 'text-slate-500 hover:text-[#13263B] hover:bg-slate-100'
+                                  ? 'bg-emerald-50/95 border-emerald-400 text-emerald-950 font-bold shadow-xs ring-1 ring-emerald-400/40'
+                                  : 'bg-white/80 border-slate-200/90 text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:bg-white'
                               }`}
                             >
-                              <span>✓ Présent(e)</span>
+                              <span
+                                className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                                  member.isAttending
+                                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
+                                    : 'border-slate-300 bg-white group-hover:border-slate-400'
+                                }`}
+                              >
+                                {member.isAttending && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                              </span>
+                              <span>Présent(e)</span>
                             </button>
 
+                            {/* Option Absent(e) */}
                             <button
                               type="button"
+                              role="radio"
+                              aria-checked={!member.isAttending}
                               onClick={() => setMemberAttendance(member.id, false)}
-                              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold font-sans tracking-wide transition-all cursor-pointer flex items-center gap-1 ${
+                              className={`group flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-sans transition-all cursor-pointer ${
                                 !member.isAttending
-                                  ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold'
-                                  : 'text-slate-500 hover:text-rose-700 hover:bg-rose-50'
+                                  ? 'bg-rose-50/95 border-rose-300 text-rose-950 font-bold shadow-xs ring-1 ring-rose-300/40'
+                                  : 'bg-white/80 border-slate-200/90 text-slate-500 hover:border-slate-300 hover:text-rose-700 hover:bg-white'
                               }`}
                             >
-                              <span>✗ Absent(e)</span>
+                              <span
+                                className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                                  !member.isAttending
+                                    ? 'border-rose-500 bg-rose-500 text-white shadow-xs'
+                                    : 'border-slate-300 bg-white group-hover:border-slate-400'
+                                }`}
+                              >
+                                {!member.isAttending && <X className="w-2.5 h-2.5 stroke-[3]" />}
+                              </span>
+                              <span>Absent(e)</span>
                             </button>
                           </div>
                         </div>
+
+                        {/* Note when absent */}
+                        {!member.isAttending && (
+                          <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 flex items-center gap-2 text-xs text-slate-500 italic">
+                            <span>Ne sera pas présent(e) aux festivités.</span>
+                          </div>
+                        )}
 
                         {/* Events checkboxes if attending */}
                         {member.isAttending && (
                           <div className="mt-3 pt-3 border-t border-[#3B6FA0]/10 space-y-3">
                             <span className="block text-[10px] font-sans font-bold uppercase tracking-wider text-[#13263B]">
-                              Événements auxquels participent {member.firstName} :
+                              Événements auxquels participe {member.firstName} :
                             </span>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
@@ -648,7 +686,7 @@ export default function RSVPForm() {
                                   <span className={`text-[11px] font-medium transition-all ${
                                     !(member.events?.vinHonneur ?? true) ? 'line-through text-slate-400' : 'text-[#13263B]'
                                   }`}>
-                                    Vin d'Honneur (16h30)
+                                    Vin d'Honneur (17h30)
                                   </span>
                                 </label>
                               )}
