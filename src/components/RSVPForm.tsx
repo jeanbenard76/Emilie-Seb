@@ -552,18 +552,16 @@ export default function RSVPForm() {
                       <button
                         type="button"
                         onClick={() => batchSetAttendance(true)}
-                        className="px-3 py-1.5 bg-white hover:bg-[#FAF7F2] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
+                        className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors"
                       >
-                        <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                        <span>Tous présents</span>
+                        Tous présents
                       </button>
                       <button
                         type="button"
                         onClick={() => batchSetAttendance(false)}
-                        className="px-3 py-1.5 bg-white hover:bg-[#FAF7F2] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
+                        className="px-3 py-1.5 bg-[#FAF7F2] hover:bg-[#F2ECE1] border border-[#3B6FA0]/20 text-[#13263B] text-[11px] font-sans font-medium rounded-lg cursor-pointer transition-colors"
                       >
-                        <X className="w-3.5 h-3.5 text-rose-500 stroke-[2.5]" />
-                        <span>Tous absents</span>
+                        Tous absents
                       </button>
                     </div>
                   </div>
@@ -576,7 +574,7 @@ export default function RSVPForm() {
                         className={`p-4 sm:p-5 rounded-2xl border transition-all ${
                           member.isAttending
                             ? 'bg-white/95 backdrop-blur-sm border-[#3B6FA0]/30 shadow-sm'
-                            : 'bg-[#FAF7F2]/70 backdrop-blur-sm border-slate-200 shadow-2xs'
+                            : 'bg-white/70 backdrop-blur-sm border-slate-200'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
@@ -601,68 +599,59 @@ export default function RSVPForm() {
                             </div>
                           </div>
 
-                          {/* Explicit Attendance Radio Buttons (Cercles à cocher Présent / Absent) */}
+                          {/* Radio Buttons (Présent / Absent) */}
                           <div
                             role="radiogroup"
                             aria-label={`Présence de ${member.firstName}`}
-                            className="flex items-center gap-2 bg-slate-50/80 p-1 rounded-2xl border border-slate-200/80"
+                            className="flex items-center gap-5 sm:gap-6 py-1"
                           >
                             {/* Option Présent(e) */}
-                            <button
-                              type="button"
-                              role="radio"
-                              aria-checked={member.isAttending}
+                            <label
                               onClick={() => setMemberAttendance(member.id, true)}
-                              className={`group flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-sans transition-all cursor-pointer ${
-                                member.isAttending
-                                  ? 'bg-emerald-50/95 border-emerald-400 text-emerald-950 font-bold shadow-xs ring-1 ring-emerald-400/40'
-                                  : 'bg-white/80 border-slate-200/90 text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:bg-white'
-                              }`}
+                              className="flex items-center gap-2.5 cursor-pointer select-none group"
                             >
                               <span
-                                className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
                                   member.isAttending
-                                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
-                                    : 'border-slate-300 bg-white group-hover:border-slate-400'
+                                    ? 'border-[#13263B]'
+                                    : 'border-slate-300 group-hover:border-slate-400 bg-white'
                                 }`}
                               >
-                                {member.isAttending && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                {member.isAttending && (
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#13263B]" />
+                                )}
                               </span>
-                              <span>Présent(e)</span>
-                            </button>
+                              <span className={`text-xs sm:text-sm font-sans transition-colors ${
+                                member.isAttending ? 'font-semibold text-[#13263B]' : 'text-slate-500 group-hover:text-slate-700'
+                              }`}>
+                                Présent(e)
+                              </span>
+                            </label>
 
                             {/* Option Absent(e) */}
-                            <button
-                              type="button"
-                              role="radio"
-                              aria-checked={!member.isAttending}
+                            <label
                               onClick={() => setMemberAttendance(member.id, false)}
-                              className={`group flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-sans transition-all cursor-pointer ${
-                                !member.isAttending
-                                  ? 'bg-rose-50/95 border-rose-300 text-rose-950 font-bold shadow-xs ring-1 ring-rose-300/40'
-                                  : 'bg-white/80 border-slate-200/90 text-slate-500 hover:border-slate-300 hover:text-rose-700 hover:bg-white'
-                              }`}
+                              className="flex items-center gap-2.5 cursor-pointer select-none group"
                             >
                               <span
-                                className={`w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
                                   !member.isAttending
-                                    ? 'border-rose-500 bg-rose-500 text-white shadow-xs'
-                                    : 'border-slate-300 bg-white group-hover:border-slate-400'
+                                    ? 'border-[#13263B]'
+                                    : 'border-slate-300 group-hover:border-slate-400 bg-white'
                                 }`}
                               >
-                                {!member.isAttending && <X className="w-2.5 h-2.5 stroke-[3]" />}
+                                {!member.isAttending && (
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#13263B]" />
+                                )}
                               </span>
-                              <span>Absent(e)</span>
-                            </button>
+                              <span className={`text-xs sm:text-sm font-sans transition-colors ${
+                                !member.isAttending ? 'font-semibold text-[#13263B]' : 'text-slate-500 group-hover:text-slate-700'
+                              }`}>
+                                Absent(e)
+                              </span>
+                            </label>
                           </div>
                         </div>
-
-                        {/* Note when absent */}
-                        {!member.isAttending && (
-                          <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 flex items-center gap-2 text-xs text-slate-500 italic">
-                            <span>Ne sera pas présent(e) aux festivités.</span>
-                          </div>
-                        )}
 
                         {/* Events checkboxes if attending */}
                         {member.isAttending && (
