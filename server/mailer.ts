@@ -275,10 +275,14 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
         ${guestRecap}
       </div>
       
-      <p style="font-size: 15px; font-weight: 300; margin-bottom: 40px; line-height: 1.8;">
+      <p style="font-size: 15px; font-weight: 300; margin-bottom: 24px; line-height: 1.8;">
         Si le moindre imprévu venait modifier ces informations, n’hésitez pas à nous en faire part sur le site internet ou en répondant simplement à ce courriel.
       </p>
       
+      <p style="font-size: 14px; font-weight: 300; margin-bottom: 32px; line-height: 1.8; color: #5A5040; background-color: #FAF7F2; padding: 14px 18px; border-radius: 8px; border-left: 3px solid #C4A475;">
+        🗳️ <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration pour le 1<sup>er</sup> tour des élections présidentielles 2027 ! Cela tombe le même week-end.
+      </p>
+
       <p style="font-size: 15px; font-weight: 300; line-height: 1.8;">
         Dans l’attente de célébrer ce moment précieux à vos côtés,<br><br>
         <span style="font-size: 17px; font-weight: 400; letter-spacing: 0.5px; color: #13263B;">Valentine & Jean</span>

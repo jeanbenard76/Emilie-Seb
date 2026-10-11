@@ -135,13 +135,15 @@ export default function RSVPForm() {
 
     const sanitizedMembers = fam.members.map((m) => {
       const inv = m.invitedTo || { vinHonneur: true, repasNoces: true, brunchLendemain: true };
+      const isAttending = fam.hasResponded ? (m.isAttending ?? true) : true;
       return {
         ...m,
+        isAttending,
         invitedTo: inv,
         events: {
-          vinHonneur: inv.vinHonneur !== false ? Boolean(m.events.vinHonneur) : false,
-          repasNoces: inv.repasNoces ? Boolean(m.events.repasNoces) : false,
-          brunchLendemain: inv.brunchLendemain ? Boolean(m.events.brunchLendemain) : false,
+          vinHonneur: inv.vinHonneur !== false ? (fam.hasResponded ? Boolean(m.events?.vinHonneur) : true) : false,
+          repasNoces: inv.repasNoces ? (fam.hasResponded ? Boolean(m.events?.repasNoces) : true) : false,
+          brunchLendemain: inv.brunchLendemain ? (fam.hasResponded ? Boolean(m.events?.brunchLendemain) : true) : false,
         },
       };
     });
@@ -405,6 +407,14 @@ export default function RSVPForm() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Rappel citoyen présidentielles */}
+              <div className="bg-[#FAF7F2] border border-[#C4A475]/35 rounded-2xl p-4 max-w-md mx-auto text-xs text-[#5A5040] font-sans leading-relaxed text-center sm:text-left flex items-start gap-3">
+                <span className="text-lg leading-none shrink-0">🗳️</span>
+                <p>
+                  <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration pour le 1<sup>er</sup> tour des élections présidentielles 2027, cela tombe le même week-end !
+                </p>
               </div>
 
               <button
