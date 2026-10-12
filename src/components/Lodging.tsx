@@ -8,6 +8,9 @@ import essentielImg from '../assets/images/essentiel.jpg';
 import durdentImg from '../assets/images/durdent.jpg';
 import colvertImg from '../assets/images/colvert.jpg';
 import ecurieImg from '../assets/images/ecurie.jpg';
+import hericourtImg from '../assets/images/hericourt.jpg';
+import marinOnfroyImg from '../assets/images/marin_onfroy.jpg';
+import galopinImg from '../assets/images/galopin.jpg';
 import { Bed, Hotel, ExternalLink, ChevronLeft, ChevronRight, Check, MapPin, Info } from 'lucide-react';
 
 interface LodgingCard {
@@ -53,6 +56,45 @@ const LODGING_CAROUSEL: LodgingCard[] = [
     capacity: 6,
     highlights: ["3 chambres", "Parking privé", "Jardin"],
     link: "https://www.booking.com/hotel/fr/gite-de-la-durdent.fr.html?aid=304142&label=gen173nr-10CAQoggJCGHNlYXJjaF9vaGVydmlsbGUsIGZyYW5jZUgNWARoTYgBAZgBM7gBF8gBDNgBA-gBAfgBAYgCAagCAbgC2O7S0wbAAgHSAiRiMGJkZTc2Yi1mYmNlLTQyZTUtOWE4ZS03ZGIxNWYxMTFlNTPYAgHgAgE&ucfs=1&checkin=2027-04-17&checkout=2027-04-18&dest_id=-1455744&dest_type=city&group_adults=2&no_rooms=1&group_children=0&srpvid=7da0746cd4340596&srepoch=1786034165&all_sr_blocks=1176860701_390210577_6_0_0&highlighted_blocks=1176860701_390210577_6_0_0&matching_block_id=1176860701_390210577_6_0_0&atlas_src=sr_iw_title",
+  },
+  {
+    id: 'hericourt-durdent',
+    name: "Aux Sources de la Durdent",
+    category: "AIRBNB · HÉRICOURT",
+    distance: "À 6 MIN (4,5 KM)",
+    image: hericourtImg,
+    description: "Logement chaleureux niché aux sources de la Durdent, avec petits-déjeuners offerts.",
+    price: "30€ / pers / nuit",
+    minNights: 1,
+    capacity: 6,
+    highlights: ["2 chambres (4/6 pers.)", "Petits-déjeuners offerts", "Proche Manoir"],
+    link: "https://www.airbnb.fr/rooms/1330461790438506397?unique_share_id=b2399b5a-9779-4a3c-8b92-b1a3dc4014ad&viralityEntryPoint=1&s=76",
+  },
+  {
+    id: 'marin-onfroy-xxl',
+    name: "Marin Onfroy XXL",
+    category: "AIRBNB · VEAUVILLE",
+    distance: "À 8 MIN (6,5 KM)",
+    image: marinOnfroyImg,
+    description: "Belle maison de campagne rénovée avec grand jardin et vue dégagée au calme.",
+    price: "28€ / pers / nuit",
+    minNights: 1,
+    capacity: 6,
+    highlights: ["2 chambres / 4 lits", "2 salles de bain", "Grand jardin au calme"],
+    link: "https://www.airbnb.fr/rooms/1737601152692547132?unique_share_id=8e98b827-86c1-4620-afe8-5bece88ec239&viralityEntryPoint=1&s=76",
+  },
+  {
+    id: 'galopin-clos-masure',
+    name: "Le Galopin (Clos-Masure)",
+    category: "AIRBNB · VEAUVILLE",
+    distance: "À 8 MIN (6,5 KM)",
+    image: galopinImg,
+    description: "Gîte tout confort au sein d'un authentique clos-masure normand typique et verdoyant.",
+    price: "32€ / pers / nuit",
+    minNights: 1,
+    capacity: 4,
+    highlights: ["Clos-masure normand", "2 chambres / 3 lits", "Entrée indépendante"],
+    link: "https://www.airbnb.fr/rooms/1696280360815857646?unique_share_id=f1880dba-ba36-4098-a460-245bbdd37d2d&viralityEntryPoint=1&s=76",
   },
   {
     id: 'colvert',
