@@ -685,7 +685,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                                   <span className={`text-[11px] font-medium transition-all ${
                                     !(member.events?.vinHonneur ?? true) ? 'line-through text-slate-400' : 'text-[#13263B]'
                                   }`}>
-                                    Vin d'Honneur (17h30)
+                                    Vin d'Honneur (18h00)
                                   </span>
                                 </label>
                               )}

@@ -41,12 +41,12 @@ export default function InteractiveMapRoute({ onShowLodging }: InteractiveMapRou
 
   const scheduleItems = [
     {
-      time: '14H00',
+      time: '14H30',
       title: 'Cérémonie religieuse',
       location: "Église catholique Notre-Dame-de-l'Assomption, Arques-la-Bataille",
     },
     {
-      time: '17H30',
+      time: '18H00',
       title: 'Vin d\'honneur',
       location: 'Manoir d\'Auffay, Oherville',
     },
@@ -218,7 +218,7 @@ export default function InteractiveMapRoute({ onShowLodging }: InteractiveMapRou
               <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 space-y-3 shadow-xs flex flex-col items-center text-center">
                 <h4 className="font-display font-semibold text-lg text-[#13263B]">Horaires</h4>
                 <p className="text-xs text-[#5A5040] leading-relaxed font-sans">
-                  La cérémonie religieuse débutera à 14h00. Vous pourrez tranquillement prendre place dans l'église dès 13h45.
+                  La cérémonie religieuse débutera à 14h30. Vous pourrez tranquillement prendre place dans l'église dès 14h15.
                 </p>
               </div>
               <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 space-y-3 shadow-xs flex flex-col items-center text-center">
