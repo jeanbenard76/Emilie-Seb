@@ -11,15 +11,15 @@
     "personalNote": "Pour notre lune de miel, nous avons choisi le Cambodge afin de partir sur les traces de la famille de Valentine et d'en (re)découvrir la culture !"
   },
   {
-    "id": "cadeau-3636609",
-    "title": "Zenith",
-    "description": "Jeu de stratégie cherchant à prendre le contrôle du système solaire. Se joue à 2 ou à 4 joueurs",
-    "targetAmount": 29.9,
+    "id": "cadeau-3633655",
+    "title": "Azul : Pavillon d'été mini",
+    "description": "Jeu de société de placement de tuiles et de stratégie",
+    "targetAmount": 22.49,
     "currentAmount": 0,
     "category": "Jeux de société",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791528662v5q5l_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3636609.html",
-    "personalNote": "As d'or 2026, Zenith nous permettra d'occuper nos soirées d'hiver à 2 ou avec des amis !"
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790964751c60nd_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633655.html",
+    "personalNote": "As d'or 2018, Azul est un grand classique que nous aimons beaucoup mais que nous n'avons pas encore dans notre ludothèque !"
   },
   {
     "id": "cadeau-3636610",
@@ -33,6 +33,17 @@
     "personalNote": "Parce que dans le couple tout n'est pas que compétition, ce jeu nous apprendra à coopérer !"
   },
   {
+    "id": "cadeau-3636609",
+    "title": "Zenith",
+    "description": "Jeu de stratégie cherchant à prendre le contrôle du système solaire. Se joue à 2 ou à 4 joueurs",
+    "targetAmount": 29.9,
+    "currentAmount": 0,
+    "category": "Jeux de société",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791528662v5q5l_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3636609.html",
+    "personalNote": "As d'or 2026, Zenith nous permettra d'occuper nos soirées d'hiver à 2 ou avec des amis !"
+  },
+  {
     "id": "cadeau-3636611",
     "title": "Courtisans",
     "description": "Jeu de carte d'influence, il faut réussir à faire gagner son clan à la table de la Reine",
@@ -44,17 +55,6 @@
     "personalNote": "Découvert en 2025 dans un bar à jeu avec des copains, on vous le conseille !"
   },
   {
-    "id": "cadeau-3633655",
-    "title": "Azul : Pavillon d'été mini",
-    "description": "Jeu de société de placement de tuiles et de stratégie",
-    "targetAmount": 22.49,
-    "currentAmount": 0,
-    "category": "Jeux de société",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790964751c60nd_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633655.html",
-    "personalNote": "As d'or 2018, Azul est un grand classique que nous aimons beaucoup mais que nous n'avons pas encore dans notre ludothèque !"
-  },
-  {
     "id": "cadeau-3633196",
     "title": "18 assiettes Benardaud",
     "description": "Lot de 18 assiettes \"Soleil Levant\" pour sublimer nos futures tables de repas",
@@ -64,6 +64,17 @@
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790801493lml2h_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633196.html",
     "personalNote": "Pour nos repas en famille ou entre amis, ces assiettes serviront à Noël, pour Pâques ou même lors de futurs anniversaires !"
+  },
+  {
+    "id": "cadeau-3635813",
+    "title": "Plat ovale 38cm Benardaud",
+    "description": "Plat ovale de 38 cm, modèle \"Soleil Levant\" en porcelaine de Limoges",
+    "targetAmount": 306,
+    "currentAmount": 0,
+    "category": "Art de la table",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448933chx69_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635813.html",
+    "personalNote": "L'incontournable pour présenter dignement le traditionnel rôti du dimanche ou un beau poisson !"
   },
   {
     "id": "cadeau-3633195",
@@ -88,17 +99,6 @@
     "personalNote": "Jean se rêvant d'être chef saucier, cet ustensible sera son allié !"
   },
   {
-    "id": "cadeau-3635813",
-    "title": "Plat ovale 38cm Benardaud",
-    "description": "Plat ovale de 38 cm, modèle \"Soleil Levant\" en porcelaine de Limoges",
-    "targetAmount": 306,
-    "currentAmount": 0,
-    "category": "Art de la table",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448933chx69_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635813.html",
-    "personalNote": "L'incontournable pour présenter dignement le traditionnel rôti du dimanche ou un beau poisson !"
-  },
-  {
     "id": "cadeau-3635814",
     "title": "Compotier Benardaud",
     "description": "Compotier creux de 24,5 cm (80 cl), modèle \"Soleil Levant\" en porcelaine de Limoges",
@@ -118,7 +118,7 @@
     "category": "Appartement",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790974316crd8a_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633660.html",
-    "personalNote": "Le rêve de Jean : un appartement impeccable sans lever le petit doigt pendant 90 jours, et un pilotage LIDAR pour éviter tout risque de piratage !"
+    "personalNote": "Le rêve de Jean : un appartement impeccable sans lever le petit doigt pendant 90 jours, et un pilotage LIDAR pour éviter tout risque de piratage!"
   },
   {
     "id": "cadeau-3633192",
@@ -134,7 +134,7 @@
   {
     "id": "cadeau-3633661",
     "title": "Machine à crêpes",
-    "description": "Appareil permettant de cuire simultanément 6 mini-crêpes ou pancakes",
+    "description": "Appareil permettant de cuire simultanément 6 mini-crêpes ou pancakes     ",
     "targetAmount": 69.99,
     "currentAmount": 0,
     "category": "Appartement",
@@ -167,7 +167,7 @@
   {
     "id": "cadeau-3633662",
     "title": "6 Mini cocottes en céramique",
-    "description": "Ensemble de 6 récipients individuels en céramique",
+    "description": "Ensemble de 6 récipients individuels en céramique          ",
     "targetAmount": 174,
     "currentAmount": 0,
     "category": "Appartement",
