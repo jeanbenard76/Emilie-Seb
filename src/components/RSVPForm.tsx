@@ -338,8 +338,8 @@ export default function RSVPForm() {
       
       {/* Editorial Header */}
       <div className="text-center mb-6 sm:mb-8 xl:mb-12">
-        <span className="font-serif italic text-xs sm:text-sm xl:text-base text-[#C4A475] tracking-wider uppercase block mb-4">
-          Réponse Souhaitée Avant le 15 Février 2027
+        <span className="text-[10px] sm:text-[11px] tracking-[0.3em] font-sans uppercase font-bold text-[#C4A475] block mb-3">
+          RÉPONSE SOUHAITÉE AVANT LE 15 FÉVRIER 2027
         </span>
         <h2 className="font-script text-[clamp(2.5rem,5vw,4rem)] xl:text-[4.5rem] 2xl:text-[5rem] text-[#13263B] leading-tight pt-2">
           Confirmation de Présence
@@ -413,7 +413,7 @@ export default function RSVPForm() {
               <div className="bg-[#FAF7F2] border border-[#C4A475]/35 rounded-2xl p-4 max-w-md mx-auto text-xs text-[#5A5040] font-sans leading-relaxed text-center sm:text-left flex items-start gap-3">
                 <span className="text-lg leading-none shrink-0">🗳️</span>
                 <p>
-                  <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration pour le 1<sup>er</sup> tour des élections présidentielles 2027, cela tombe le même week-end !
+                  <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration si nécessaire pour le 1<sup>er</sup> tour des élections présidentielles 2027, cela tombe le même week-end !
                 </p>
               </div>
 

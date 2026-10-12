@@ -98,7 +98,7 @@ const STACK_ROTATIONS = [-3, 4, -2, 3, -4, 5, -3, 2];
 export default function DynamicPhotoStack() {
   const [topIndex, setTopIndex] = useState<number>(0);
   const [isAssembled, setIsAssembled] = useState<boolean>(false);
-  const [turningCardId, setTurningCardId] = useState<number | null>(null);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.3 });
@@ -114,20 +114,23 @@ export default function DynamicPhotoStack() {
   }, [isInView, isAssembled]);
 
   const cycleToNext = () => {
-    const currentTop = PHOTOS[topIndex];
+    if (isAnimating) return;
+    setIsAnimating(true);
     setIsAssembled(true);
-    setTurningCardId(currentTop.id);
-
-    setTimeout(() => {
-      setTurningCardId(null);
-    }, 320);
-
     setTopIndex((prev) => (prev + 1) % PHOTOS.length);
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 350);
   };
 
   const cycleToPrev = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
     setIsAssembled(true);
     setTopIndex((prev) => (prev - 1 + PHOTOS.length) % PHOTOS.length);
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 350);
   };
 
   return (
@@ -141,15 +144,14 @@ export default function DynamicPhotoStack() {
       </div>
 
       {/* 8 FIXED PHOTO CARDS STACK CONTAINER */}
-      <div className="relative w-72 h-96 sm:w-80 sm:h-[420px] flex items-center justify-center cursor-grab active:cursor-grabbing select-none mb-6">
+      <div className="relative w-72 h-96 sm:w-80 sm:h-[420px] flex items-center justify-center select-none mb-6">
         {PHOTOS.map((photo, i) => {
           // Relative position in the stack: 0 = front card, 1 = 2nd card, ..., 7 = back card
           const stackPos = (i - topIndex + PHOTOS.length) % PHOTOS.length;
           const isTop = stackPos === 0;
-          const isTurning = turningCardId === photo.id;
 
           // Z-Index calculations (max 30, well below top header z-[100]):
-          let zIndex = isTurning ? 1 : (30 - stackPos * 3);
+          const zIndex = 30 - stackPos * 3;
 
           const scale = 1 - Math.min(stackPos * 0.03, 0.18);
           const yOffset = stackPos * 6;
@@ -163,7 +165,7 @@ export default function DynamicPhotoStack() {
             <motion.div
               key={photo.id}
               style={{ zIndex }}
-              className={`absolute w-full h-full bg-[#FAF7F2] border border-[#3B6FA0]/20 p-3.5 pb-12 rounded-2xl shadow-md flex flex-col justify-between ${
+              className={`absolute w-full h-full bg-[#FAF7F2] border border-[#3B6FA0]/20 p-3.5 pb-12 rounded-2xl shadow-md flex flex-col justify-between touch-none ${
                 isTop && isInView ? 'pointer-events-auto cursor-grab active:cursor-grabbing' : 'pointer-events-none'
               }`}
               initial={{
@@ -176,11 +178,11 @@ export default function DynamicPhotoStack() {
               animate={
                 isAssembled
                   ? {
-                      scale: isTurning ? 0.9 : scale,
-                      y: isTurning ? yOffset + 10 : yOffset,
-                      x: isTurning ? 320 : (isTop ? 0 : xOffset),
-                      rotate: isTurning ? 16 : targetRotation,
-                      opacity: isTurning ? 0.3 : 1,
+                      scale,
+                      y: yOffset,
+                      x: isTop ? 0 : xOffset,
+                      rotate: targetRotation,
+                      opacity: 1,
                     }
                   : (isInView
                       ? {
@@ -200,7 +202,7 @@ export default function DynamicPhotoStack() {
               }
               transition={
                 isAssembled
-                  ? { duration: 0.3, ease: 'easeOut', delay: 0 }
+                  ? { duration: 0.35, ease: 'easeOut' }
                   : {
                       type: 'spring',
                       stiffness: 85,
@@ -215,10 +217,13 @@ export default function DynamicPhotoStack() {
               }
               drag={isTop ? 'x' : false}
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.7}
+              dragElastic={0.6}
+              dragSnapToOrigin={true}
               onDragEnd={(_, info) => {
-                if (Math.abs(info.offset.x) > 100) {
+                if (info.offset.x < -80 || info.velocity.x < -400) {
                   cycleToNext();
+                } else if (info.offset.x > 80 || info.velocity.x > 400) {
+                  cycleToPrev();
                 }
               }}
             >

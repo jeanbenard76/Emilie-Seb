@@ -67,8 +67,8 @@ export default function InteractiveMapRoute({ onShowLodging }: InteractiveMapRou
       
       {/* 1. EDITORIAL HEADER */}
       <div className="text-center space-y-2 pb-2">
-        <span className="font-serif italic text-xs sm:text-sm text-[#C4A475] tracking-widest uppercase block mb-4">
-          — Déroulement de la journée —
+        <span className="text-[10px] sm:text-[11px] tracking-[0.3em] font-sans uppercase font-bold text-[#C4A475] block mb-3">
+          DÉROULEMENT DE LA JOURNÉE
         </span>
         <h2 className="font-script text-[clamp(3rem,6vw,5rem)] text-[#13263B] leading-tight pt-2">
           Le Programme
@@ -155,8 +155,8 @@ export default function InteractiveMapRoute({ onShowLodging }: InteractiveMapRou
         
         {/* Editorial Header */}
         <div className="text-center space-y-2">
-          <span className="font-serif italic text-xs text-[#C4A475] tracking-widest uppercase block">
-            - Venir en Normandie -
+          <span className="text-[10px] sm:text-[11px] tracking-[0.3em] font-sans uppercase font-bold text-[#C4A475] block mb-3">
+            VENIR EN NORMANDIE
           </span>
           <h3 className="font-display text-2xl sm:text-4xl text-[#13263B] font-light tracking-wide">
             Accès & Transports

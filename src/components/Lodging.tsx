@@ -101,7 +101,7 @@ export default function Lodging() {
     <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-8" id="lodging-page-section">
       {/* Editorial Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <span className="font-serif italic text-xs sm:text-sm text-[#C4A475] uppercase tracking-widest block mb-4">
+        <span className="text-[10px] sm:text-[11px] tracking-[0.3em] font-sans uppercase font-bold text-[#C4A475] block mb-3">
           SÉJOUR &amp; HÉBERGEMENT
         </span>
         <h2 className="font-script text-[clamp(3rem,6vw,5rem)] text-[#13263B] leading-tight pt-2">

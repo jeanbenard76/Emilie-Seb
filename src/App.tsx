@@ -210,7 +210,7 @@ export default function App() {
               <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center w-full max-w-4xl mx-auto space-y-2 sm:space-y-3 pb-2 sm:pb-4">
                 {/* Invitation phrase */}
                 <p className="text-[10px] sm:text-sm font-serif italic text-[#3B6FA0] tracking-wider mb-2 sm:mb-4">
-                  sont heureux de vous inviter au mariage de leurs enfants
+                  ont la très grande joie de vous inviter au mariage de leurs enfants
                 </p>
 
                 {/* Main Script Heading */}
@@ -318,11 +318,11 @@ export default function App() {
         </div>
         
         <p className="text-xs text-[#3B6FA0] italic">
-          17 Avril 2027 • Torcy-Le-Grand &amp; Manoir d'Auffay, Oherville (Normandie)
+          17 Avril 2027 • Arques-la-Bataille &amp; Manoir d'Auffay, Oherville (Normandie)
         </p>
 
         <div className="pt-2 text-[10px] text-slate-400 font-sans uppercase tracking-widest flex items-center justify-center gap-4">
-          <span>Créé avec amour</span>
+          <span>Codé avec amour</span>
           <span>•</span>
           <span>Tous droits réservés © 2027</span>
           <span>•</span>

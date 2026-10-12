@@ -130,11 +130,25 @@ function getImagePath() {
   return path.join(process.cwd(), "public", "toile_de_jouy_mail.jpg");
 }
 
+function getLogoPath() {
+  const distPath = path.join(process.cwd(), "dist", "logo.png");
+  if (fs.existsSync(distPath)) return distPath;
+  return path.join(process.cwd(), "public", "logo.png");
+}
+
 const defaultAttachments = [
   {
     filename: "toile_de_jouy.jpg",
     path: getImagePath(),
     cid: "toileDeJouy",
+  }
+];
+
+const mailAttachmentsWithLogo = [
+  {
+    filename: "logo.png",
+    path: getLogoPath(),
+    cid: "weddingLogo",
   }
 ];
 
@@ -279,14 +293,24 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
         Si le moindre imprévu venait modifier ces informations, n’hésitez pas à nous en faire part sur le site internet ou en répondant simplement à ce courriel.
       </p>
       
-      <p style="font-size: 14px; font-weight: 300; margin-bottom: 32px; line-height: 1.8; color: #5A5040; background-color: #FAF7F2; padding: 14px 18px; border-radius: 8px; border-left: 3px solid #C4A475;">
-        🗳️ <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration pour le 1<sup>er</sup> tour des élections présidentielles 2027 ! Cela tombe le même week-end.
+      <p style="font-size: 14px; font-weight: 400; margin-bottom: 32px; line-height: 1.8; color: #B58838;">
+        <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration si nécessaire pour le 1<sup>er</sup> tour des élections présidentielles 2027 ! Cela tombe le même week-end.
       </p>
 
-      <p style="font-size: 15px; font-weight: 300; line-height: 1.8;">
-        Dans l’attente de célébrer ce moment précieux à vos côtés,<br><br>
-        <span style="font-size: 17px; font-weight: 400; letter-spacing: 0.5px; color: #13263B;">Valentine & Jean</span>
-      </p>
+      <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #f1f5f9; font-size: 15px; font-weight: 300; line-height: 1.8;">
+        <p style="margin: 0 0 16px 0;">Dans l’attente de célébrer ce moment précieux à vos côtés,</p>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 8px;">
+          <tr>
+            <td style="vertical-align: middle; padding-right: 14px;">
+              <img src="cid:weddingLogo" alt="Valentine & Jean" width="46" height="46" style="display: block; width: 46px; height: 46px; border-radius: 50%;" />
+            </td>
+            <td style="vertical-align: middle;">
+              <span style="font-size: 17px; font-weight: 500; letter-spacing: 0.5px; color: #13263B; display: block;">Valentine &amp; Jean</span>
+              <span style="font-size: 12px; color: #8C7A5B; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
+            </td>
+          </tr>
+        </table>
+      </div>
   `;
 
   const guestHtml = `
@@ -308,12 +332,14 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
       replyTo: data.email,
       subject: `💍 Nouvelle réponse RSVP : Famille ${data.familyName}`,
       html: coupleHtml,
+      attachments: mailAttachmentsWithLogo,
     },
     {
       to: data.email,
       replyTo: COUPLE_RSVP_ADDRESS,
       subject: "[RSVP Mariage de Valentine & Jean] Merci pour votre réponse.",
       html: guestHtml,
+      attachments: mailAttachmentsWithLogo,
     },
   ]);
 }
@@ -364,10 +390,20 @@ export async function sendContactNotificationEmail(data: ContactMailPayload) {
         ${esc(data.message)}
       </div>
       
-      <p style="font-size: 15px; font-weight: 300; line-height: 1.8;">
-        À très bientôt,<br><br>
-        <span style="font-size: 17px; font-weight: 400; letter-spacing: 0.5px; color: #13263B;">Valentine & Jean</span>
-      </p>
+      <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #f1f5f9; font-size: 15px; font-weight: 300; line-height: 1.8;">
+        <p style="margin: 0 0 16px 0;">À très bientôt,</p>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 8px;">
+          <tr>
+            <td style="vertical-align: middle; padding-right: 14px;">
+              <img src="cid:weddingLogo" alt="Valentine & Jean" width="46" height="46" style="display: block; width: 46px; height: 46px; border-radius: 50%;" />
+            </td>
+            <td style="vertical-align: middle;">
+              <span style="font-size: 17px; font-weight: 500; letter-spacing: 0.5px; color: #13263B; display: block;">Valentine &amp; Jean</span>
+              <span style="font-size: 12px; color: #8C7A5B; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
   `;
 
@@ -383,6 +419,7 @@ export async function sendContactNotificationEmail(data: ContactMailPayload) {
       replyTo: COUPLE_CONTACT_ADDRESS,
       subject: "[Mariage Valentine & Jean] Accusé réception de votre message",
       html: guestHtml,
+      attachments: mailAttachmentsWithLogo,
     },
   ]);
 }
