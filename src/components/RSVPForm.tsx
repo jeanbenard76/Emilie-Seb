@@ -747,8 +747,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
 
                   {/* Note si membre manquant */}
                   <div className="pt-2">
-                    <div className="p-3.5 bg-[#FAF7F2] border border-[#3B6FA0]/15 rounded-xl text-xs text-[#5A5040] font-sans flex items-start gap-2.5">
-                      <Heart className="w-4 h-4 text-[#C4A475] shrink-0 mt-0.5" />
+                    <div className="p-3.5 bg-[#FAF7F2] border border-[#3B6FA0]/15 rounded-xl text-xs text-[#5A5040] font-sans">
                       <p className="leading-relaxed">
                         Un membre de votre foyer manque à cette liste ? N’hésitez pas à nous le signaler directement via notre page{' '}
                         {onNavigateToContact ? (
