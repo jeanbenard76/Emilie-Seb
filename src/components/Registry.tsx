@@ -147,12 +147,12 @@ export default function Registry() {
                   {/* 2. GIFT CONTENT */}
                   <div>
                     {/* Title */}
-                    <h4 className="font-display text-xl sm:text-2xl text-[#13263B] font-semibold tracking-wide mb-1">
+                    <h4 className="font-display text-xl sm:text-2xl text-[#13263B] font-semibold tracking-wide mb-1 min-h-[1.75rem] sm:min-h-[2rem]">
                       {item.title}
                     </h4>
 
-                    {/* Description (Smaller) */}
-                    <p className="text-[11px] sm:text-xs text-[#5A5040] leading-relaxed mb-3 font-sans opacity-90">
+                    {/* Description (Smaller with min-height for row alignment) */}
+                    <p className="text-[11px] sm:text-xs text-[#5A5040] leading-relaxed mb-3 font-sans opacity-90 min-h-[2.5rem] sm:min-h-[2.75rem]">
                       {item.description}
                     </p>
 
