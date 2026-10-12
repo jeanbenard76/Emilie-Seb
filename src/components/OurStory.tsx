@@ -4,8 +4,8 @@ import { motion, useScroll, useSpring } from 'motion/react';
 // Default image assets
 import jbsImg from '../assets/images/jbs.png';
 import tourEiffelImg from '../assets/images/toureiffel.png';
-import voituresImg from '../assets/images/voitures.png';
-import oursImg from '../assets/images/ours.png';
+import voituresImg from '../assets/images/voitures.jpg';
+import oursImg from '../assets/images/ours.jpg';
 import retrouvaillesImg from '../assets/images/toureiffel.png';
 import buttesChaumontImg from '../assets/images/buttes_chaumont.png';
 import DynamicPhotoStack from './DynamicPhotoStack';
@@ -200,18 +200,14 @@ export default function OurStory() {
               strokeWidth="4"
               strokeDasharray="12 12"
               strokeLinecap="round"
-              style={{ pathLength: scrollYProgress }}
+              style={{ pathLength: scrollYProgress, willChange: 'stroke-dashoffset' }}
             />
           </svg>
         </div>
 
         {/* RESPONSIVE THREAD FOR MOBILE (Straight line instead of loops) */}
         <div className="block lg:hidden absolute left-1/2 -translate-x-1/2 top-[50px] bottom-[50px] w-[2px] pointer-events-none z-0">
-          <div className="w-full h-full bg-[#C4A475]/20 rounded-full absolute" />
-          <motion.div
-            className="w-full bg-[#C4A475] rounded-full origin-top"
-            style={{ scaleY: scrollYProgress }}
-          />
+          <div className="w-full h-full bg-[#C4A475]/30 rounded-full" />
         </div>
 
 
@@ -298,6 +294,8 @@ export default function OurStory() {
                               <img
                                 src={step.defaultImage}
                                 alt={`${step.title} situation`}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               />
                             </div>
@@ -313,6 +311,8 @@ export default function OurStory() {
                               <img
                                 src={step.coupleImage}
                                 alt={`${step.title} couple`}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               />
                             </div>

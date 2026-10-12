@@ -8,7 +8,7 @@ import { motion, useInView } from 'motion/react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 // 8 Souvenir Image assets
-import img1 from '../assets/images/Winner.png';
+import img1 from '../assets/images/Winner.jpg';
 import img2 from '../assets/images/camping.jpeg';
 import img3 from '../assets/images/mariage_amis.jpeg';
 import img4 from '../assets/images/course_a_pied.jpeg';
@@ -134,7 +134,7 @@ export default function DynamicPhotoStack() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 my-8" id="photo-stack-container" ref={containerRef}>
+    <div className="flex flex-col items-center justify-center p-4 my-8" ref={containerRef}>
       
       {/* SECTION HEADER */}
       <div className="text-center mb-6">
@@ -149,6 +149,12 @@ export default function DynamicPhotoStack() {
           // Relative position in the stack: 0 = front card, 1 = 2nd card, ..., 7 = back card
           const stackPos = (i - topIndex + PHOTOS.length) % PHOTOS.length;
           const isTop = stackPos === 0;
+
+          // Only render the top 4 cards (0, 1, 2, 3) to prevent Mobile Safari WebKit GPU memory exhaustion.
+          // Cards buried 4+ layers deep are completely hidden behind the front cards.
+          if (stackPos > 3) {
+            return null;
+          }
 
           // Z-Index calculations (max 30, well below top header z-[100]):
           const zIndex = 30 - stackPos * 3;
@@ -213,7 +219,7 @@ export default function DynamicPhotoStack() {
               whileHover={
                 isTop
                   ? { scale: 1.03, rotate: 0, transition: { duration: 0.2 } }
-                  : { scale: scale + 0.02, transition: { duration: 0.2 } }
+                  : undefined
               }
               drag={isTop ? 'x' : false}
               dragConstraints={{ left: 0, right: 0 }}
@@ -232,6 +238,8 @@ export default function DynamicPhotoStack() {
                 <img
                   src={photo.src}
                   alt={photo.alt}
+                  loading={isTop ? 'eager' : 'lazy'}
+                  decoding="async"
                   className="w-full h-full object-cover pointer-events-none"
                 />
               </div>
@@ -261,7 +269,6 @@ export default function DynamicPhotoStack() {
           onClick={cycleToPrev}
           className="p-2.5 rounded-full border border-[#3B6FA0]/20 bg-white hover:bg-[#FAF7F2] text-[#13263B] transition-all duration-300 shadow-2xs cursor-pointer"
           aria-label="Photo précédente"
-          id="prev-photo-btn"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -274,7 +281,6 @@ export default function DynamicPhotoStack() {
           onClick={cycleToNext}
           className="p-2.5 rounded-full border border-[#3B6FA0]/20 bg-[#FAF7F2] hover:bg-[#C4A475] hover:text-white text-[#13263B] transition-all duration-300 shadow-2xs cursor-pointer"
           aria-label="Photo suivante"
-          id="next-photo-btn"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
