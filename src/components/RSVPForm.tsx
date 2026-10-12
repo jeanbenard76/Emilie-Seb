@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, X, Search, User, Baby, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
+import { Check, X, Search, User, Baby, Footprints, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
 import { GuestFamily, FamilyMember } from '../types';
 import { getStoredFamilies, saveRSVPToLocalStorage } from '../utils/rsvpStorage';
 
@@ -365,7 +365,9 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   {members.map((m) => (
                     <div key={m.id} className="flex items-center justify-between py-1 border-b border-dashed border-slate-200">
                       <div className="flex items-center gap-2">
-                        {m.isChild ? (
+                        {m.isBaby ? (
+                          <Footprints className="w-3.5 h-3.5 text-amber-600" />
+                        ) : m.isChild ? (
                           <Baby className="w-3.5 h-3.5 text-[#C4A475]" />
                         ) : (
                           <User className="w-3.5 h-3.5 text-[#13263B]" />
@@ -373,7 +375,13 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                         <span className="font-medium text-[#13263B]">
                           {m.firstName} {m.lastName}
                         </span>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full uppercase ${(m.isChild || m.isBaby) ? 'bg-[#C4A475]/20 text-[#8B6B38]' : 'bg-[#13263B]/10 text-[#13263B]'}`}>
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full uppercase ${
+                          m.isBaby 
+                            ? 'bg-amber-100 text-amber-800 font-semibold' 
+                            : m.isChild 
+                              ? 'bg-[#C4A475]/20 text-[#8B6B38]' 
+                              : 'bg-[#13263B]/10 text-[#13263B]'
+                        }`}>
                           {m.isBaby ? 'Bébé' : (m.isChild ? 'Enfant' : 'Adulte')}
                         </span>
                       </div>
@@ -567,8 +575,20 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                           
                           {/* Member name & Badge */}
                           <div className="flex items-center gap-2.5">
-                            <div className={`p-2 rounded-xl ${member.isChild ? 'bg-[#C4A475]/20 text-[#8B6B38]' : 'bg-[#13263B]/10 text-[#13263B]'}`}>
-                              {member.isChild ? <Baby className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                            <div className={`p-2 rounded-xl ${
+                              member.isBaby 
+                                ? 'bg-amber-100 text-amber-700' 
+                                : member.isChild 
+                                  ? 'bg-[#C4A475]/20 text-[#8B6B38]' 
+                                  : 'bg-[#13263B]/10 text-[#13263B]'
+                            }`}>
+                              {member.isBaby ? (
+                                <Footprints className="w-4 h-4" />
+                              ) : member.isChild ? (
+                                <Baby className="w-4 h-4" />
+                              ) : (
+                                <User className="w-4 h-4" />
+                              )}
                             </div>
 
                             <div>
@@ -577,7 +597,11 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                                   {member.firstName} {member.lastName}
                                 </span>
                                 <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
-                                  (member.isChild || member.isBaby) ? 'bg-[#C4A475]/20 text-[#8B6B38]' : 'bg-[#13263B]/10 text-[#13263B]'
+                                  member.isBaby 
+                                    ? 'bg-amber-100 text-amber-800' 
+                                    : member.isChild 
+                                      ? 'bg-[#C4A475]/20 text-[#8B6B38]' 
+                                      : 'bg-[#13263B]/10 text-[#13263B]'
                                 }`}>
                                   {member.isBaby ? 'Bébé' : (member.isChild ? 'Enfant' : 'Adulte')}
                                 </span>
