@@ -410,8 +410,7 @@ export default function RSVPForm() {
               </div>
 
               {/* Rappel citoyen présidentielles */}
-              <div className="bg-[#FAF7F2] border border-[#C4A475]/35 rounded-2xl p-4 max-w-md mx-auto text-xs text-[#5A5040] font-sans leading-relaxed text-center sm:text-left flex items-start gap-3">
-                <span className="text-lg leading-none shrink-0">🗳️</span>
+              <div className="bg-[#FAF7F2] border border-[#C4A475]/35 rounded-2xl p-4 max-w-md mx-auto text-xs text-[#5A5040] font-sans leading-relaxed text-center sm:text-left">
                 <p>
                   <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration si nécessaire pour le 1<sup>er</sup> tour des élections présidentielles 2027, cela tombe le même week-end !
                 </p>
