@@ -112,9 +112,15 @@ export default function Registry() {
       {/* Grid of Translucent White Gift Cards (2 Columns on Desktop) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
         <AnimatePresence>
-          {filteredItems.map((item) => {
+          {filteredItems.map((item, index) => {
             const isFullyFunded = item.currentAmount >= item.targetAmount;
             const percentage = item.currentAmount ? Math.round((item.currentAmount / item.targetAmount) * 100) : 0;
+
+            // Aligner la hauteur de description avec la carte voisine sur la même rangée (grille à 2 colonnes)
+            // Si les 2 cartes de la rangée n'ont qu'une seule ligne, on n'ajoute pas d'espace vide superflu.
+            const partner = index % 2 === 0 ? filteredItems[index + 1] : filteredItems[index - 1];
+            const isMultiLine = (text?: string) => (text?.trim()?.length || 0) > 67;
+            const rowNeedsTwoLines = isMultiLine(item.description) || (partner && isMultiLine(partner.description));
 
             return (
               <motion.div 
@@ -151,8 +157,10 @@ export default function Registry() {
                       {item.title}
                     </h4>
 
-                    {/* Description (Smaller with min-height for row alignment) */}
-                    <p className="text-[11px] sm:text-xs text-[#5A5040] leading-relaxed mb-3 font-sans opacity-90 min-h-[2.5rem] sm:min-h-[2.75rem]">
+                    {/* Description : s'adapte à 1 ligne si les 2 cartes de la rangée sont courtes, ou s'aligne sur 2 lignes si l'une des 2 est plus longue */}
+                    <p className={`text-[11px] sm:text-xs text-[#5A5040] leading-relaxed mb-3 font-sans opacity-90 ${
+                      rowNeedsTwoLines ? 'md:min-h-[2.75rem]' : ''
+                    }`}>
                       {item.description}
                     </p>
 
