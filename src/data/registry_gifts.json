@@ -2,7 +2,7 @@
   {
     "id": "cadeau-3633200",
     "title": "Participation au voyage de noce",
-    "description": "3 semaines en Asie du sud-Est, combinant Cambodge, Vietnam et Laos.",
+    "description": "3 semaines en Asie du sud-Est, combinant Cambodge, Vietnam et Laos",
     "targetAmount": 5000,
     "currentAmount": 0,
     "category": "Voyage de noce",
@@ -11,48 +11,37 @@
     "personalNote": "Pour notre lune de miel, nous avons choisi le Cambodge afin de partir sur les traces de la famille de Valentine et d'en (re)découvrir la culture !"
   },
   {
-    "id": "cadeau-3633656",
-    "title": "Croix",
-    "description": "Croix en mosaïque fabriquée par les soins de l'artisanat de l'Arche.",
-    "targetAmount": 35,
-    "currentAmount": 0,
-    "category": "Appartement",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790964816jfj08_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633656.html",
-    "personalNote": ""
-  },
-  {
     "id": "cadeau-3636609",
     "title": "Zenith",
-    "description": "",
+    "description": "Jeu de stratégie cherchant à prendre le contrôle du système solaire. Se joue à 2 ou à 4 joueurs",
     "targetAmount": 29.9,
     "currentAmount": 0,
     "category": "Jeux de société",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791528662v5q5l_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3636609.html",
-    "personalNote": ""
+    "personalNote": "As d'or 2026, Zenith nous permettra d'occuper nos soirées d'hiver à 2 ou avec des amis !"
   },
   {
     "id": "cadeau-3636610",
     "title": "Behind",
-    "description": "",
+    "description": "Jeu de société coopératif d'enquête et de résolution d'énigmes",
     "targetAmount": 20.9,
     "currentAmount": 0,
     "category": "Jeux de société",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791528701x3djy_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3636610.html",
-    "personalNote": ""
+    "personalNote": "Parce que dans le couple tout n'est pas que compétition, ce jeu nous apprendra à coopérer !"
   },
   {
     "id": "cadeau-3636611",
     "title": "Courtisans",
-    "description": "",
+    "description": "Jeu de carte d'influence, il faut réussir à faire gagner son clan à la table de la Reine",
     "targetAmount": 18,
     "currentAmount": 0,
     "category": "Jeux de société",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/179152880744jo4_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3636611.html",
-    "personalNote": ""
+    "personalNote": "Découvert en 2025 dans un bar à jeu avec des copains, on vous le conseille !"
   },
   {
     "id": "cadeau-3633655",
@@ -67,85 +56,63 @@
   },
   {
     "id": "cadeau-3633196",
-    "title": "8 assiettes à dîner 26cm",
-    "description": "Assiettes de diamètre de 26 cm dotées d'un émaillage polychrome haute résistance.",
-    "targetAmount": 62.05,
+    "title": "18 assiettes Benardaud",
+    "description": "Lot de 18 assiettes \"Soleil Levant\" pour sublimer nos futures tables de repas",
+    "targetAmount": 1116.9,
     "currentAmount": 0,
     "category": "Art de la table",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790801493lml2h_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633196.html",
-    "personalNote": ""
+    "personalNote": "Pour nos repas en famille ou entre amis, ces assiettes serviront à Noël, pour Pâques ou même lors de futurs anniversaires !"
   },
   {
     "id": "cadeau-3633195",
-    "title": "8 assiettes à dessert 21cm",
-    "description": "Assiettes de diamètre de 21 cm dotées d'un émaillage polychrome haute résistance.",
-    "targetAmount": 304,
+    "title": "18 assiettes à dessert Benardaud",
+    "description": "Lot de 18 assiettes à dessert colorées \"Soleil Levant\" pour sublimer nos futures tables de repas",
+    "targetAmount": 1366.2,
     "currentAmount": 0,
     "category": "Art de la table",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790801397ak7pg_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633195.html",
-    "personalNote": ""
+    "personalNote": "Pour nos repas en famille ou entre amis, ces assiettes serviront à Noël, pour Pâques ou même lors de futurs anniversaires !"
   },
   {
     "id": "cadeau-3635820",
-    "title": "Saucière 25cL",
-    "description": "Saucière \"Soleil Levant\" en porcelaine de Limoges d'une contenance de 25cl",
+    "title": "Saucière Benardaud",
+    "description": "Saucière \"Soleil Levant\" en porcelaine de Limoges d'une contenance de 25cL",
     "targetAmount": 306,
     "currentAmount": 0,
     "category": "Art de la table",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448592dxldr_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635820.html",
-    "personalNote": ""
-  },
-  {
-    "id": "cadeau-3635819",
-    "title": "8 tasses à café",
-    "description": "8 tasses à café \"Soleil Levant\" en porcelaine de Limoges d'une contenance de 8cl",
-    "targetAmount": 673.1,
-    "currentAmount": 0,
-    "category": "Art de la table",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448806dlavk_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635819.html",
-    "personalNote": ""
-  },
-  {
-    "id": "cadeau-3635818",
-    "title": "8 tasses à thé",
-    "description": "8 tasses à thé \"Soleil Levant\" en porcelaine de Limoges d'une contenance de 23cl",
-    "targetAmount": 678.3,
-    "currentAmount": 0,
-    "category": "Art de la table",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448868ovdej_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635818.html",
-    "personalNote": ""
-  },
-  {
-    "id": "cadeau-3635814",
-    "title": "Compotier",
-    "description": "Compotier creux de 24,5 cm (80 cl), modèle \"Soleil Levant\" en porcelaine de Limoges",
-    "targetAmount": 175.1,
-    "currentAmount": 0,
-    "category": "Art de la table",
-    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448903h6veq_595.jpg",
-    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635814.html",
-    "personalNote": ""
+    "personalNote": "Jean se rêvant d'être chef saucier, cet ustensible sera son allié !"
   },
   {
     "id": "cadeau-3635813",
-    "title": "Plat ovale 38cm",
+    "title": "Plat ovale 38cm Benardaud",
     "description": "Plat ovale de 38 cm, modèle \"Soleil Levant\" en porcelaine de Limoges",
     "targetAmount": 306,
     "currentAmount": 0,
     "category": "Art de la table",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448933chx69_595.jpg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635813.html",
-    "personalNote": ""
+    "personalNote": "L'incontournable pour présenter dignement le traditionnel rôti du dimanche ou un beau poisson !"
+  },
+  {
+    "id": "cadeau-3635814",
+    "title": "Compotier Benardaud",
+    "description": "Compotier creux de 24,5 cm (80 cl), modèle \"Soleil Levant\" en porcelaine de Limoges",
+    "targetAmount": 175.1,
+    "currentAmount": 0,
+    "category": "Art de la table",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791448903h6veq_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635814.html",
+    "personalNote": "La touche finale pour parfaire notre décoration de table au moment de servir le dessert !"
   },
   {
     "id": "cadeau-3633660",
     "title": "Dyson R2 Nurovi",
-    "description": "Robot aspirateur avec deux serpillaires triangulaires, un moteur d'aspiration de 21 000 Pa et une brosse auto-démêlante",
+    "description": "Robot aspirateur avec deux serpillaires triangulaires",
     "targetAmount": 849,
     "currentAmount": 0,
     "category": "Appartement",
@@ -155,8 +122,8 @@
   },
   {
     "id": "cadeau-3633192",
-    "title": "Platine vinyle Pro-Ject T1 Evo",
-    "description": "Modèle T1 BT modifiée, fabriquée en Europe, qui intègre un préamplificateur, un émetteur Bluetooth et une cellule Ortofon OM10.",
+    "title": "Platine vinyle",
+    "description": "Modèle T1 BT modifiée, acceptant les vinyles 33 et 45 tours",
     "targetAmount": 449,
     "currentAmount": 0,
     "category": "Appartement",
@@ -166,19 +133,19 @@
   },
   {
     "id": "cadeau-3633661",
-    "title": "Machine à crêpes 6pers.",
-    "description": "Appareil à crêpes électrique de 1000W avec revêtement antiadhésif permettant de cuire simultanément 6 mini-crêpes ou pancakes",
+    "title": "Machine à crêpes",
+    "description": "Appareil permettant de cuire simultanément 6 mini-crêpes ou pancakes",
     "targetAmount": 69.99,
     "currentAmount": 0,
     "category": "Appartement",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790974345wrusr_595.png",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633661.html",
-    "personalNote": "Il en va de la survie de nos traditions : le sacro-saint rituel de la crêpe party du dimanche soir de valentine doit pouvoir perdurer!"
+    "personalNote": "Il en va de la survie de nos traditions : le sacro-saint rituel de la crêpe party du dimanche soir de Valentine doit pouvoir perdurer!"
   },
   {
     "id": "cadeau-3633658",
-    "title": "Machine à raclette 8pers.",
-    "description": "Appareil à raclette de 1100W multifonction avec plaque de cuisson en pierre naturelle",
+    "title": "Machine à raclette",
+    "description": "Appareil pour 8 personnes multifonction avec plaque de cuisson en pierre naturelle",
     "targetAmount": 149.99,
     "currentAmount": 0,
     "category": "Appartement",
@@ -189,23 +156,34 @@
   {
     "id": "cadeau-3633663",
     "title": "Cocotte ronde en fonte émaillée 28cm",
-    "description": "Ustensile culinaire en fonte émaillée, tolérant une amplitude thermique extrême allant de -23℃ à 260℃. Son revêtement multicouche résiste à l'acidité et favorise une caramélisation optimale.",
+    "description": "Ustensile culinaire en fonte, permettant d'aller de -23℃ à 260℃! Son revêtement résiste à l'acidité et favorise une caramélisation optimale",
     "targetAmount": 455,
     "currentAmount": 0,
     "category": "Appartement",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790974661nno34_595.jpeg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633663.html",
-    "personalNote": ""
+    "personalNote": "Pour faire des bons petits plats (Soupe Citronnelle, Blanquette de veau ...), et le tout en beauté!"
   },
   {
     "id": "cadeau-3633662",
     "title": "6 Mini cocottes en céramique",
-    "description": "Ensemble de 6 récipients individuels en céramique technique (grès émaillé) à haute densité.",
+    "description": "Ensemble de 6 récipients individuels en céramique",
     "targetAmount": 174,
     "currentAmount": 0,
     "category": "Appartement",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1790974506o3fya_595.jpeg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633662.html",
+    "personalNote": "Assortis à la grande cocotte bleue, grâce à ces mini cocottes en céramique, il va falloir développer notre créativité!"
+  },
+  {
+    "id": "cadeau-3638287",
+    "title": "Table à manger",
+    "description": "Table à manger 8 pers. en noyer",
+    "targetAmount": 839.95,
+    "currentAmount": 0,
+    "category": "Appartement",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/17917855033o0tj_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3638287.html",
     "personalNote": ""
   },
   {
@@ -217,17 +195,17 @@
     "category": "Appartement",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/17909648586n6wc_595.png",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3633657.html",
-    "personalNote": ""
+    "personalNote": "Afin de pouvoir faire sécher nos carafes après avoir ouvert une bonne bouteille !"
   },
   {
     "id": "cadeau-3635821",
-    "title": "Plancha à gaz ENO",
+    "title": "Plancha",
     "description": "Plancha à gaz piezo-mécanique 3 brûleurs à double rampe",
     "targetAmount": 439,
     "currentAmount": 1,
     "category": "Appartement",
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791355495u1m4q_595.jpeg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635821.html",
-    "personalNote": ""
+    "personalNote": "Pour transformer notre terrasse Montrougienne en guinguette estivale !"
   }
 ]

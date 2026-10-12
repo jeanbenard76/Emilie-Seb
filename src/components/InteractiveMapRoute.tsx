@@ -218,7 +218,7 @@ export default function InteractiveMapRoute({ onShowLodging }: InteractiveMapRou
               <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 space-y-3 shadow-xs flex flex-col items-center text-center">
                 <h4 className="font-display font-semibold text-lg text-[#13263B]">Horaires</h4>
                 <p className="text-xs text-[#5A5040] leading-relaxed font-sans">
-                  La cérémonie religieuse débutera à 14h30. Vous pourrez tranquillement prendre place dans l'église dès 14h15.
+                  La cérémonie religieuse débutera à 14h30. Vous pourrez tranquillement prendre place dans l'église dès 14h00.
                 </p>
               </div>
               <div className="bg-white border border-slate-100 rounded-2xl p-6 sm:p-8 space-y-3 shadow-xs flex flex-col items-center text-center">
