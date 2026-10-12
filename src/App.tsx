@@ -289,7 +289,7 @@ export default function App() {
         {/* RSVP FORM PAGE */}
         {activePage === 'rsvp' && (
           <div id="rsvp-page" className="py-2 sm:py-8 animate-fade-in">
-            <RSVPForm />
+            <RSVPForm onNavigateToContact={() => handlePageChange('contact')} />
           </div>
         )}
 

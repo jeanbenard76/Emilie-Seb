@@ -7,25 +7,23 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, Search, User, Baby, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
 import { GuestFamily, FamilyMember } from '../types';
-import { getStoredFamilies, saveRSVPToLocalStorage, getStoredRSVPs } from '../utils/rsvpStorage';
+import { getStoredFamilies, saveRSVPToLocalStorage } from '../utils/rsvpStorage';
 
-export default function RSVPForm() {
+interface RSVPFormProps {
+  onNavigateToContact?: () => void;
+}
+
+export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const [families, setFamilies] = useState<GuestFamily[]>(() => getStoredFamilies());
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedFamily, setSelectedFamily] = useState<GuestFamily | null>(null);
 
-  // Editable members list for the selected or custom family
+  // Editable members list for the selected family
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  // New member inputs
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [newFirstName, setNewFirstName] = useState('');
-  const [newLastName, setNewLastName] = useState('');
-  const [newIsChild, setNewIsChild] = useState(false);
 
   // Admin dashboard state
   const [showAdmin, setShowAdmin] = useState(false);
@@ -243,27 +241,6 @@ export default function RSVPForm() {
       }
       return { ...m, isAttending: status };
     }));
-  };
-
-  // Add a new member / child to the current family
-  const handleAddMember = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFirstName.trim()) return;
-
-    const newMember: FamilyMember = {
-      id: `m-added-${Date.now()}`,
-      firstName: newFirstName.trim(),
-      lastName: newLastName.trim() || (selectedFamily?.familyName || ''),
-      isChild: newIsChild,
-      isAttending: true,
-      events: { vinHonneur: true, repasNoces: true, brunchLendemain: true },
-    };
-
-    setMembers((prev) => [...prev, newMember]);
-    setNewFirstName('');
-    setNewLastName('');
-    setNewIsChild(false);
-    setShowAddMember(false);
   };
 
   // Submit RSVP to SQLite wedding.db backend or fallback storage
@@ -744,59 +721,26 @@ export default function RSVPForm() {
                     ))}
                   </div>
 
-                  {/* Add Extra Member Option */}
+                  {/* Note si membre manquant */}
                   <div className="pt-2">
-                    {!showAddMember ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowAddMember(true)}
-                        className="px-4 py-2 border border-dashed border-[#3B6FA0]/30 hover:border-[#13263B] text-[#13263B] text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span>+ Ajouter un membre ou un accompagnant non listé</span>
-                      </button>
-                    ) : (
-                      <div className="p-4 bg-white border border-[#3B6FA0]/20 rounded-2xl space-y-3">
-                        <h4 className="font-display font-semibold text-sm text-[#13263B]">
-                          Ajouter un membre à la famille
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            value={newFirstName}
-                            onChange={(e) => setNewFirstName(e.target.value)}
-                            placeholder="Prénom (ex: Hugo)"
-                            className="px-3 py-2 bg-white border border-[#3B6FA0]/20 rounded-xl text-xs text-[#13263B] focus:outline-none"
-                          />
-                          <input
-                            type="text"
-                            value={newLastName}
-                            onChange={(e) => setNewLastName(e.target.value)}
-                            placeholder={`Nom (par défaut ${selectedFamily?.familyName || ''})`}
-                            className="px-3 py-2 bg-white border border-[#3B6FA0]/20 rounded-xl text-xs text-[#13263B] focus:outline-none"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <label className="flex items-center gap-2 cursor-pointer text-xs text-[#13263B]">
-                            <input
-                              type="checkbox"
-                              checked={newIsChild}
-                              onChange={(e) => setNewIsChild(e.target.checked)}
-                              className="accent-[#C4A475]"
-                            />
-                            <span>C'est un enfant</span>
-                          </label>
-
+                    <div className="p-3.5 bg-[#FAF7F2] border border-[#3B6FA0]/15 rounded-xl text-xs text-[#5A5040] font-sans flex items-start gap-2.5">
+                      <Heart className="w-4 h-4 text-[#C4A475] shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">
+                        Un membre de votre foyer manque à cette liste ? N’hésitez pas à nous le signaler directement via notre page{' '}
+                        {onNavigateToContact ? (
                           <button
                             type="button"
-                            onClick={handleAddMember}
-                            className="px-4 py-2 bg-[#13263B] hover:bg-[#13263B]/90 text-white text-xs font-semibold rounded-xl cursor-pointer"
+                            onClick={onNavigateToContact}
+                            className="font-semibold text-[#13263B] underline decoration-[#C4A475] underline-offset-2 hover:text-[#C4A475] cursor-pointer inline"
                           >
-                            Ajouter à la famille
+                            Nous contacter
                           </button>
-                        </div>
-                      </div>
-                    )}
+                        ) : (
+                          <span className="font-semibold text-[#13263B]">« Nous contacter »</span>
+                        )}
+                        {' '}afin que nous puissions l'ajouter.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -849,7 +793,19 @@ export default function RSVPForm() {
                 <div className="p-6 bg-white/60 backdrop-blur-sm shadow-sm border border-dashed border-[#3B6FA0]/20 rounded-2xl text-center space-y-2">
                   <Heart className="w-5 h-5 text-[#C4A475] mx-auto" />
                   <p className="font-serif italic text-xs text-[#5A5040] leading-relaxed">
-                    Saisissez au moins 3 lettres de votre prénom ou nom de famille ci-dessus pour retrouver votre foyer et confirmer votre présence en quelques clics. Si votre famille n'apparaît pas, veuillez nous en excuser et transmettre votre réponse via le formulaire de contact. S'il manque un membre, vous pouvez l'ajouter grâce au bouton « Ajouter un membre ou un accompagnant non listé ».
+                    Saisissez au moins 3 lettres de votre prénom ou nom de famille ci-dessus pour retrouver votre foyer et confirmer votre présence en quelques clics. Si votre foyer n'apparaît pas ou s'il manque un membre de votre famille, n'hésitez pas à nous en informer directement via la rubrique{' '}
+                    {onNavigateToContact ? (
+                      <button
+                        type="button"
+                        onClick={onNavigateToContact}
+                        className="font-semibold text-[#13263B] underline decoration-[#C4A475] underline-offset-2 hover:text-[#C4A475] cursor-pointer inline not-italic"
+                      >
+                        Nous contacter
+                      </button>
+                    ) : (
+                      <span className="font-semibold text-[#13263B] not-italic">« Nous contacter »</span>
+                    )}
+                    .
                   </p>
                 </div>
               )}
