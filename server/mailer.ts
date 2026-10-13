@@ -294,7 +294,7 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
       </p>
       
       <p style="font-size: 14px; font-weight: 400; margin-bottom: 32px; line-height: 1.8; color: #B58838;">
-        <strong>Petit rappel citoyen :</strong> Pensez à faire votre procuration si nécessaire pour le 1<sup>er</sup> tour des élections présidentielles 2027 ! Cela tombe le même week-end.
+        <strong>Petit rappel :</strong> Pensez à faire votre procuration si nécessaire pour le 1<sup>er</sup> tour des élections présidentielles 2027 ! Cela tombe le même week-end.
       </p>
 
       <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #f1f5f9; font-size: 15px; font-weight: 300; line-height: 1.8;">
@@ -305,8 +305,8 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
               <img src="cid:weddingLogo" alt="Valentine & Jean" width="46" height="46" style="display: block; width: 46px; height: 46px; border-radius: 50%;" />
             </td>
             <td style="vertical-align: middle;">
-              <span style="font-size: 17px; font-weight: 500; letter-spacing: 0.5px; color: #13263B; display: block;">Valentine &amp; Jean</span>
-              <span style="font-size: 12px; color: #8C7A5B; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
+              <span style="font-size: 17px; font-weight: 500; letter-spacing: 0.5px; color: #3B6E9E; display: block;">Valentine &amp; Jean</span>
+              <span style="font-size: 12px; color: #B58838; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
             </td>
           </tr>
         </table>
@@ -338,7 +338,7 @@ ${data.members.map((m) => {
 
 Si le moindre imprévu venait modifier ces informations, n’hésitez pas à nous en faire part sur le site internet ou en répondant simplement à ce courriel.
 
-Petit rappel citoyen : Pensez à faire votre procuration si nécessaire pour le 1er tour des élections présidentielles 2027 ! Cela tombe le même week-end.
+Petit rappel : Pensez à faire votre procuration si nécessaire pour le 1er tour des élections présidentielles 2027 ! Cela tombe le même week-end.
 
 Dans l’attente de célébrer ce moment précieux à vos côtés,
 Valentine & Jean — 17 Avril 2027`;
@@ -424,8 +424,8 @@ export async function sendContactNotificationEmail(data: ContactMailPayload) {
               <img src="cid:weddingLogo" alt="Valentine & Jean" width="46" height="46" style="display: block; width: 46px; height: 46px; border-radius: 50%;" />
             </td>
             <td style="vertical-align: middle;">
-              <span style="font-size: 17px; font-weight: 500; letter-spacing: 0.5px; color: #13263B; display: block;">Valentine &amp; Jean</span>
-              <span style="font-size: 12px; color: #8C7A5B; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
+              <span style="font-size: 17px; font-weight: 500; letter-spacing: 0.5px; color: #3B6E9E; display: block;">Valentine &amp; Jean</span>
+              <span style="font-size: 12px; color: #B58838; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
             </td>
           </tr>
         </table>
