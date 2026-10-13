@@ -41,7 +41,7 @@ export const STORY_STEPS: StoryStep[] = [
       "En 2019, nous déménageons tous les deux à Paris. Valentine rejoint son frère dans une colocation de l'Avenue de Versailles, tandis que Jean s'installe dans un studio avec vue Tour Eiffel ! (en sortant bien la tête de la fenêtre) Nous arrivons au lycée Jean-Baptiste-Say, dans une classe de prépa PT de 45 élèves, dont seulement 20 % de filles. Deux ans de cours, de devoirs et de concours commencent alors.",
     valentineSays: "J'arrive dans cette top prépa avec un objectif : réussir les concours sans redoubler, et avoir AU MOINS les Arts & Métiers, mais pour ça, il faut bien travailler.",
     jeanSays:
-      "Sociable comme je suis, j'aborde cette rentrée avec une philosophie très stricte : je suis là pour travailler, point barre. La prépa, ce n'est pas fait pour se faire des amis, et je n'en ressens aucunement le besoin.",
+      "J'arrive à Paris sans savoir ce qui m'attend pour ces deux années de prépa. Je commence comme interne-externe avec l'espoir d'intégrer les Arts et Métiers.",
     iconName: 'GraduationCap',
   },
   {
@@ -58,7 +58,7 @@ export const STORY_STEPS: StoryStep[] = [
       "À la sortie du confinement, le besoin de s'aérer se fait sentir. Nous faisons alors quelques pauses de plus en plus régulières sous forme de balades dans Paris. Mais attention, exigence de la prépa oblige : la promenade ne doit pas durer trop longtemps et ne doit commencer ni trop tôt, ni trop tard. Rapidement, nous commençons à noter tous les parcs parisiens, et nous avons déjà un favori : celui des Buttes Chaumont.",
     valentineSays: "J'ai gardé la note dans mon téléphone des évaluations faites sur les parcs : le Parc Monceau est en dernière position !!",
     jeanSays:
-      "Bon, j'avais dit que la prépa n'était pas faite pour se faire des amis... Mais il faut bien avouer que nos discussions sur Snapchat pendant le confinement étaient plutôt agréables. Alors au final, pourquoi ne pas les prolonger dans la vraie vie ?",
+      "La majorité des balades restait tout de même autour de la tour Eiffel, et pas plus d'une par semaine pour ne pas valider le dicton : prépa maquée, prépa ratée.",
     iconName: 'Coffee',
   },
   {
@@ -75,7 +75,7 @@ export const STORY_STEPS: StoryStep[] = [
       "Deux ans après notre rentrée en prépa, les concours marquent le début d'une nouvelle étape. Valentine intègre les Arts & Métiers à Metz, tandis que Jean rejoint IMT Atlantique à Brest. La prépa est terminée, la vie étudiante commence. À distance. Avec près de 1 000 kilomètres entre nos deux écoles, il va falloir s'organiser. La distance commence à être une habitude dans la famille Chem-lenhof !",
     valentineSays: "Jeannot m'appelle tout content de m'annoncer qu'il est pris à Brest, pendant que je réalise de mon coté que Brest-Metz ne se fait pas si vite.",
     jeanSays:
-      "En plein road-trip avec des amis, les résultats tombent : je suis pris dans l'école que je visais à Brest ! J'étais tellement heureux que je me suis empressé d'annoncer cette nouvelle à Valentine avant de raccrocher pour fêter ça",
+      "Après deux ans de prépa, mes ambitions n'étaient plus du tout les mêmes : tout sauf les Arts, et plus jamais de sciences de l'ingénieur ! Quel soulagement d'apprendre que j'étais accepté à l'IMT Atlantique...",
     iconName: 'Compass',
   },
   {
@@ -92,7 +92,7 @@ export const STORY_STEPS: StoryStep[] = [
       "Et comme si la distance entre Brest et Metz ne suffisait pas, Jean s'en va pendant 6 mois en plein cœur de la Finlande, puis Valentine aux Etats Unis. Mais cela nous permet de vire des expériences inédites : bains dans des lacs glacés, randonnées sauvages avec face à face avec des Ours Bruns du Tennessee.",
     valentineSays: "Plutôt que de faire un échange dans une école en Laponie, Jean a décidé de vivre dans le sud de la Finlande, dans une région froide, grise et sans soleil. Super les vacances.",
     jeanSays:
-      "Au final, l'avantage de cette distance pendant nos trois années d'école d'ingénieurs, c'est que ça nous a donné une excellente excuse pour voyager !",
+      "De toute façon, la Laponie c’est trop touristique et il y fait tout le temps nuit... La Finlande, c’est le sauna suivi d’un bon bain glacé dans un lac : et ça, je l’avais ! Quant à Valentine… sa destination n’était pas le Far West non plus, mais on pourra vous en reparler !",
     iconName: 'Globe',
   },
   {
@@ -109,7 +109,7 @@ export const STORY_STEPS: StoryStep[] = [
       "En mars 2025, Valentine rejoint Jean à Paris pour commencer sa vie professionnelle, dans le conseil naturellement. Après plusieurs années de trains et d'avions réguliers, la longue distance prend fin : Jean habite dans le 15e, elle s'installe dans le 12e arrondissement (les deux arrondissements les plus éloignés de Paris sans doute).",
     valentineSays: "Après 5 ans de relations sans jamais vivre dans la même ville, on se retrouve enfin à Paris ! Il y a forcément un petit temps d'adaptation pour redécouvrir la vie à quelques minutes en métro l'un de l'autre.",
     jeanSays:
-      "La distance étant définitivement derrière nous, une nouvelle étape est à prévoir et à organiser....",
+      "Après mes débuts parisiens en avril 2024, Valentine me rejoint ! Elle emménage à l'opposé de chez moi dans Paris, comme pour me faire passer un message...",
     iconName: 'Briefcase',
   },
   {
@@ -300,7 +300,7 @@ export default function OurStory() {
                               />
                             </div>
                           </div>
-                          
+
                           {/* Photo Couple */}
                           <div
                             className="bg-white p-2.5 rounded-xl shadow-xs border border-slate-200 transition-transform duration-300 hover:rotate-0 max-w-[140px] sm:max-w-[160px] w-full relative group"
