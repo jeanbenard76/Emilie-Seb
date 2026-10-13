@@ -5,6 +5,12 @@ import { motion, useScroll, useSpring } from 'motion/react';
 import jbsImg from '../assets/images/jbs.png';
 import tourEiffelImg from '../assets/images/toureiffel.png';
 import voituresImg from '../assets/images/voitures.jpg';
+import etape1 from '../assets/images/etape1.jpg';
+import etape2 from '../assets/images/etape2.jpg';
+import etape3 from '../assets/images/etape3.jpeg';
+import etape4 from '../assets/images/etape4.jpeg';
+import etape5 from '../assets/images/etape7.jpeg';
+import etape6 from '../assets/images/etape6.jpeg';
 import oursImg from '../assets/images/ours.jpg';
 import retrouvaillesImg from '../assets/images/toureiffel.png';
 import buttesChaumontImg from '../assets/images/buttes_chaumont.png';
@@ -35,7 +41,7 @@ export const STORY_STEPS: StoryStep[] = [
     subtitle: 'Lycée Jean-Baptiste Say (Paris)',
     location: 'Paris 16e',
     defaultImage: jbsImg,
-    coupleImage: voituresImg,
+    coupleImage: etape1,
     rotateDeg: '-2.5deg',
     recitGlobal:
       "En 2019, nous déménageons tous les deux à Paris. Valentine rejoint son frère dans une colocation de l'Avenue de Versailles, tandis que Jean s'installe dans un studio avec vue Tour Eiffel ! (en sortant bien la tête de la fenêtre) Nous arrivons au lycée Jean-Baptiste-Say, dans une classe de prépa PT de 45 élèves, dont seulement 20 % de filles. Deux ans de cours, de devoirs et de concours commencent alors.",
@@ -52,7 +58,7 @@ export const STORY_STEPS: StoryStep[] = [
     subtitle: 'Jardin du Luxembourg, Buttes-Chaumont, Panthéon',
     location: 'Paris',
     defaultImage: tourEiffelImg,
-    coupleImage: voituresImg,
+    coupleImage: etape2,
     rotateDeg: '2deg',
     recitGlobal:
       "À la sortie du confinement, le besoin de s'aérer se fait sentir. Nous faisons alors quelques pauses de plus en plus régulières sous forme de balades dans Paris. Mais attention, exigence de la prépa oblige : la promenade ne doit pas durer trop longtemps et ne doit commencer ni trop tôt, ni trop tard. Rapidement, nous commençons à noter tous les parcs parisiens, et nous avons déjà un favori : celui des Buttes Chaumont.",
@@ -69,7 +75,7 @@ export const STORY_STEPS: StoryStep[] = [
     subtitle: 'IMT Atlantique vs Arts & Métiers de Metz',
     location: 'Allés retours Metz-Brest',
     defaultImage: voituresImg,
-    coupleImage: voituresImg,
+    coupleImage: etape3,
     rotateDeg: '-1.8deg',
     recitGlobal:
       "Deux ans après notre rentrée en prépa, les concours marquent le début d'une nouvelle étape. Valentine intègre les Arts & Métiers à Metz, tandis que Jean rejoint IMT Atlantique à Brest. La prépa est terminée, la vie étudiante commence. À distance. Avec près de 1 000 kilomètres entre nos deux écoles, il va falloir s'organiser. La distance commence à être une habitude dans la famille Chem-lenhof !",
@@ -86,7 +92,7 @@ export const STORY_STEPS: StoryStep[] = [
     subtitle: 'Brest, Metz, Paris, Finlande & USA',
     location: 'Saunas & Ours Américains',
     defaultImage: oursImg,
-    coupleImage: voituresImg,
+    coupleImage: etape4,
     rotateDeg: '2.8deg',
     recitGlobal:
       "Et comme si la distance entre Brest et Metz ne suffisait pas, Jean s'en va pendant 6 mois en plein cœur de la Finlande, puis Valentine aux Etats Unis. Mais cela nous permet de vire des expériences inédites : bains dans des lacs glacés, randonnées sauvages avec face à face avec des Ours Bruns du Tennessee.",
@@ -103,7 +109,7 @@ export const STORY_STEPS: StoryStep[] = [
     subtitle: 'Consultants en Énergie & Industrie',
     location: 'Paris',
     defaultImage: retrouvaillesImg,
-    coupleImage: voituresImg,
+    coupleImage: etape5,
     rotateDeg: '-2deg',
     recitGlobal:
       "En mars 2025, Valentine rejoint Jean à Paris pour commencer sa vie professionnelle, dans le conseil naturellement. Après plusieurs années de trains et d'avions réguliers, la longue distance prend fin : Jean habite dans le 15e, elle s'installe dans le 12e arrondissement (les deux arrondissements les plus éloignés de Paris sans doute).",
@@ -120,7 +126,7 @@ export const STORY_STEPS: StoryStep[] = [
     subtitle: 'Retour aux sources sur notre rocher',
     location: 'Parc des Buttes-Chaumont, Paris',
     defaultImage: buttesChaumontImg,
-    coupleImage: voituresImg,
+    coupleImage: etape6,
     rotateDeg: '1.5deg',
     recitGlobal:
       "Après plusieurs mois de préparatifs secrets, Jean propose une balade hivernale aux Buttes-Chaumont. Le lieu n'est évidemment pas choisi au hasard : c'est ce même parc que nous avions officiellement élu \"meilleur parc parisien\". C'est dans ce décor symbolique qu'il se lance et fait sa demande en mariage. Et après (seulement !) quelques petites secondes de réflexion pour faire durer le suspense, à base de « QUOI ? » « MAIS QUOI ??? », Valentine dit \"oui, évidemment\" !",
