@@ -53,7 +53,7 @@ export default function InteractiveMapRoute({ onShowLodging }: InteractiveMapRou
     {
       time: '20H00',
       title: 'Dîner de Noces',
-      location: 'Sous la verrière du Manoir',
+      location: 'Dans la grange du Manoir',
     },
     {
       time: '23H30',
