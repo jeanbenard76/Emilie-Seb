@@ -80,7 +80,7 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
-async function sendMail(mail: { to: string; subject: string; html: string; replyTo?: string; attachments?: any[] }) {
+async function sendMail(mail: { to: string; subject: string; html: string; text?: string; replyTo?: string; attachments?: any[] }) {
   const smtp = getTransporter();
   if (!smtp) {
     console.log(`[Mail] EMAIL_ADDRESS / EMAIL_PASSWORD absents : email non envoyé à ${mail.to} (« ${mail.subject} »)`);
@@ -326,12 +326,37 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
     </div>
   `;
 
+  const guestText = `Bonjour,
+
+${introText}
+
+À titre de confirmation, voici ce que nous avons noté :
+${data.members.map((m) => {
+  if (!m.isAttending) return `- ${m.firstName} ${m.lastName} : Ne sera malheureusement pas des nôtres`;
+  return `- ${m.firstName} ${m.lastName} : Présent(e) (${eventsOf(m)})`;
+}).join('\n')}
+
+Si le moindre imprévu venait modifier ces informations, n’hésitez pas à nous en faire part sur le site internet ou en répondant simplement à ce courriel.
+
+Petit rappel citoyen : Pensez à faire votre procuration si nécessaire pour le 1er tour des élections présidentielles 2027 ! Cela tombe le même week-end.
+
+Dans l’attente de célébrer ce moment précieux à vos côtés,
+Valentine & Jean — 17 Avril 2027`;
+
+  const coupleText = `Nouvelle réponse RSVP : Famille ${data.familyName}
+Contact : ${data.email}
+Bilan : ${attendingCount} présent(s) sur ${totalCount}
+${data.message ? `Message joint : « ${data.message} »\n` : ''}
+Détail des membres :
+${data.members.map((m) => `- ${m.firstName} ${m.lastName} (${m.isChild ? 'Enfant' : 'Adulte'}) : ${m.isAttending ? 'PRÉSENT(E) - ' + eventsOf(m) : 'ABSENT(E)'}${m.dietaryNotes ? ' [Régime: ' + m.dietaryNotes + ']' : ''}`).join('\n')}`;
+
   await sendAll([
     {
       to: COUPLE_RSVP_ADDRESS,
       replyTo: data.email,
       subject: `💍 Nouvelle réponse RSVP : Famille ${data.familyName}`,
       html: coupleHtml,
+      text: coupleText,
       attachments: mailAttachmentsWithLogo,
     },
     {
@@ -339,6 +364,7 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
       replyTo: COUPLE_RSVP_ADDRESS,
       subject: "[RSVP Mariage de Valentine & Jean] Merci pour votre réponse.",
       html: guestHtml,
+      text: guestText,
       attachments: mailAttachmentsWithLogo,
     },
   ]);
@@ -407,18 +433,36 @@ export async function sendContactNotificationEmail(data: ContactMailPayload) {
     </div>
   `;
 
+  const coupleText = `Message de contact : ${subjectLabel}
+De : ${data.name} (${data.email})
+
+Message :
+${data.message}`;
+
+  const guestText = `Bonjour ${data.name},
+
+Nous avons bien reçu votre message. Un grand merci de nous avoir écrit ! Nous en prenons soin et vous répondrons dans les plus brefs délais.
+
+Pour rappel, voici la teneur de votre message :
+« ${data.message} »
+
+À très bientôt,
+Valentine & Jean — 17 Avril 2027`;
+
   await sendAll([
     {
       to: COUPLE_CONTACT_ADDRESS,
       replyTo: data.email,
       subject: `[${subjectLabel}] Message de contact de ${data.name}`,
       html: coupleHtml,
+      text: coupleText,
     },
     {
       to: data.email,
       replyTo: COUPLE_CONTACT_ADDRESS,
       subject: "[Mariage Valentine & Jean] Accusé réception de votre message",
       html: guestHtml,
+      text: guestText,
       attachments: mailAttachmentsWithLogo,
     },
   ]);

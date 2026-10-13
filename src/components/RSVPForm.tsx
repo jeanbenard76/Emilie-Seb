@@ -5,7 +5,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, X, Search, User, Baby, Smile, Footprints, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
+import { Check, X, Search, User, Baby, Footprints, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
+import ChildIcon from './ChildIcon';
 import { GuestFamily, FamilyMember } from '../types';
 import { getStoredFamilies, saveRSVPToLocalStorage } from '../utils/rsvpStorage';
 
@@ -368,7 +369,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                         {m.isBaby ? (
                           <Baby className="w-3.5 h-3.5 text-amber-600" />
                         ) : m.isChild ? (
-                          <Smile className="w-3.5 h-3.5 text-[#C4A475]" />
+                          <ChildIcon className="w-3.5 h-3.5 text-[#C4A475]" />
                         ) : (
                           <User className="w-3.5 h-3.5 text-[#13263B]" />
                         )}
@@ -585,7 +586,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                               {member.isBaby ? (
                                 <Baby className="w-4 h-4" />
                               ) : member.isChild ? (
-                                <Smile className="w-4 h-4" />
+                                <ChildIcon className="w-4 h-4" />
                               ) : (
                                 <User className="w-4 h-4" />
                               )}

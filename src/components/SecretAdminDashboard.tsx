@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, Search, Users, Baby, Smile, Utensils, MessageSquare, Check, X, ArrowLeft, Trash2, Edit2 } from 'lucide-react';
+import { Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, Search, Users, Baby, Utensils, MessageSquare, Check, X, ArrowLeft, Trash2, Edit2 } from 'lucide-react';
+import ChildIcon from './ChildIcon';
 import { GuestFamily, RSVPStats } from '../types';
 import { getStoredFamilies, clearLocalStorageRSVPs } from '../utils/rsvpStorage';
 import AdminAddFamily from './AdminAddFamily';
@@ -673,7 +674,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                       <div key={m.id} className="p-3 bg-white rounded-xl border border-slate-200/80 space-y-1.5 flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                            {m.isBaby ? <Baby className="w-3.5 h-3.5 text-amber-600" /> : m.isChild ? <Smile className="w-3.5 h-3.5 text-[#C4A475]" /> : <Users className="w-3.5 h-3.5 text-[#13263B]" />}
+                            {m.isBaby ? <Baby className="w-3.5 h-3.5 text-amber-600" /> : m.isChild ? <ChildIcon className="w-3.5 h-3.5 text-[#C4A475]" /> : <Users className="w-3.5 h-3.5 text-[#13263B]" />}
                             <span className="font-semibold text-[#13263B]">{m.firstName} {m.lastName}</span>
                             <span className="text-[9px] uppercase font-bold text-slate-400">({m.isBaby ? 'Bébé' : (m.isChild ? 'Enfant' : 'Adulte')})</span>
                           </div>
