@@ -12,7 +12,7 @@ import etape4 from '../assets/images/etape4.jpeg';
 import etape5 from '../assets/images/etape7.jpeg';
 import etape6 from '../assets/images/etape6.jpeg';
 import oursImg from '../assets/images/ours.jpg';
-import retrouvaillesImg from '../assets/images/toureiffel.png';
+import retrouvaillesImg from '../assets/images/montmartre.png';
 import buttesChaumontImg from '../assets/images/buttes_chaumont.png';
 import DynamicPhotoStack from './DynamicPhotoStack';
 
@@ -61,7 +61,7 @@ export const STORY_STEPS: StoryStep[] = [
     coupleImage: etape2,
     rotateDeg: '2deg',
     recitGlobal:
-      "À la sortie du confinement, le besoin de s'aérer se fait sentir. Nous faisons alors quelques pauses de plus en plus régulières sous forme de balades dans Paris. Mais attention, exigence de la prépa oblige : la promenade ne doit pas durer trop longtemps et ne doit commencer ni trop tôt, ni trop tard. Rapidement, nous commençons à noter tous les parcs parisiens, et nous avons déjà un favori : celui des Buttes Chaumont.",
+      "À la sortie du confinement, le besoin de s'aérer se fait sentir. Nous faisons alors quelques pauses de plus en plus régulières sous forme de balades dans Paris. Mais attention, exigence de la prépa oblige : la promenade ne doit pas durer trop longtemps et ne doit commencer ni trop tôt, ni trop tard. Rapidement, nous commençons à noter tous les parcs parisiens, et nous avons déjà un favori : celui des Buttes-Chaumont.",
     valentineSays: "J'ai gardé la note dans mon téléphone des évaluations faites sur les parcs : le Parc Monceau est en dernière position !!",
     jeanSays:
       "La majorité des balades restait tout de même autour de la tour Eiffel, et pas plus d'une par semaine pour ne pas valider le dicton : prépa maquée, prépa ratée.",
@@ -73,13 +73,13 @@ export const STORY_STEPS: StoryStep[] = [
     date: 'Été 2021',
     title: 'Résultats des Concours',
     subtitle: 'IMT Atlantique vs Arts & Métiers de Metz',
-    location: 'Allés retours Metz-Brest',
+    location: 'Allers-retours Metz-Brest',
     defaultImage: voituresImg,
     coupleImage: etape3,
     rotateDeg: '-1.8deg',
     recitGlobal:
       "Deux ans après notre rentrée en prépa, les concours marquent le début d'une nouvelle étape. Valentine intègre les Arts & Métiers à Metz, tandis que Jean rejoint IMT Atlantique à Brest. La prépa est terminée, la vie étudiante commence. À distance. Avec près de 1 000 kilomètres entre nos deux écoles, il va falloir s'organiser. La distance commence à être une habitude dans la famille Chem-lenhof !",
-    valentineSays: "Jeannot m'appelle tout content de m'annoncer qu'il est pris à Brest, pendant que je réalise de mon coté que Brest-Metz ne se fait pas si vite.",
+    valentineSays: "Jeannot m'appelle tout content de m'annoncer qu'il est pris à Brest, pendant que je réalise de mon côté que Brest-Metz ne se fait pas si vite.",
     jeanSays:
       "Après deux ans de prépa, mes ambitions n'étaient plus du tout les mêmes : tout sauf les Arts, et plus jamais de sciences de l'ingénieur ! Quel soulagement d'apprendre que j'étais accepté à l'IMT Atlantique...",
     iconName: 'Compass',
@@ -95,7 +95,7 @@ export const STORY_STEPS: StoryStep[] = [
     coupleImage: etape4,
     rotateDeg: '2.8deg',
     recitGlobal:
-      "Et comme si la distance entre Brest et Metz ne suffisait pas, Jean s'en va pendant 6 mois en plein cœur de la Finlande, puis Valentine aux Etats Unis. Mais cela nous permet de vire des expériences inédites : bains dans des lacs glacés, randonnées sauvages avec face à face avec des Ours Bruns du Tennessee.",
+      "Et comme si la distance entre Brest et Metz ne suffisait pas, Jean s'en va pendant 6 mois en plein cœur de la Finlande, puis Valentine aux États-Unis. Mais cela nous permet de vivre des expériences inédites : bains dans des lacs glacés, randonnées sauvages et face-à-face avec des ours bruns du Tennessee.",
     valentineSays: "Plutôt que de faire un échange dans une école en Laponie, Jean a décidé de vivre dans le sud de la Finlande, dans une région froide, grise et sans soleil. Super les vacances.",
     jeanSays:
       "De toute façon, la Laponie c’est trop touristique et il y fait tout le temps nuit... La Finlande, c’est le sauna suivi d’un bon bain glacé dans un lac : et ça, je l’avais ! Quant à Valentine… sa destination n’était pas le Far West non plus, mais on pourra vous en reparler !",
@@ -113,7 +113,7 @@ export const STORY_STEPS: StoryStep[] = [
     rotateDeg: '-2deg',
     recitGlobal:
       "En mars 2025, Valentine rejoint Jean à Paris pour commencer sa vie professionnelle, dans le conseil naturellement. Après plusieurs années de trains et d'avions réguliers, la longue distance prend fin : Jean habite dans le 15e, elle s'installe dans le 12e arrondissement (les deux arrondissements les plus éloignés de Paris sans doute).",
-    valentineSays: "Après 5 ans de relations sans jamais vivre dans la même ville, on se retrouve enfin à Paris ! Il y a forcément un petit temps d'adaptation pour redécouvrir la vie à quelques minutes en métro l'un de l'autre.",
+    valentineSays: "Après 5 ans de relation sans jamais vivre dans la même ville, on se retrouve enfin à Paris ! Il y a forcément un petit temps d'adaptation pour redécouvrir la vie à quelques minutes en métro l'un de l'autre.",
     jeanSays:
       "Après mes débuts parisiens en avril 2024, Valentine me rejoint ! Elle emménage à l'opposé de chez moi dans Paris, comme pour me faire passer un message...",
     iconName: 'Briefcase',
