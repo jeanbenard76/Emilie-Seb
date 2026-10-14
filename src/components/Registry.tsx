@@ -80,22 +80,17 @@ export default function Registry() {
         </h3>
         <div className="w-12 sm:w-16 h-[1px] bg-[#C4A475] mx-auto my-3 sm:my-4" />
         <p className="font-serif italic text-[#3B6FA0] text-xs sm:text-base mt-2 max-w-2xl mx-auto leading-relaxed px-2">
-          Votre présence à nos côtés lors de cette journée est notre plus beau présent. Si vous désirez néanmoins nous accompagner dans l’accomplissement de nos projets de vie futurs, vous trouverez ci-dessous notre carnet d’intentions, façonné à notre image.
-        </p>
-
-        {/* Direct Link to Millemercis */}
-        <div className="pt-4">
+          Votre présence à nos côtés lors de cette journée est notre plus beau présent. Si vous désirez néanmoins nous accompagner dans l’accomplissement de nos projets de vie futurs, vous trouverez ci-dessous notre carnet d’intentions, façonné à notre image (également accessible sur{' '}
           <a
             href={realRegistryUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 hover:bg-[#FAF7F2] border border-[#3B6FA0]/20 hover:border-[#C4A475] rounded-full text-xs font-semibold text-[#13263B] shadow-2xs transition-all group cursor-pointer"
+            className="text-[#13263B] underline decoration-[#C4A475] underline-offset-2 hover:text-[#C4A475] transition-colors not-italic font-sans font-medium"
           >
-            <Gift className="w-3.5 h-3.5 text-[#C4A475] group-hover:scale-110 transition-transform" />
-            <span>Accéder directement à notre liste sur MilleMercisMariage</span>
-            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#13263B] transition-colors" />
+            MilleMercisMariage ↗
           </a>
-        </div>
+          ).
+        </p>
       </div>
 
       {/* ELEGANT CATEGORY FILTER PILLS */}
@@ -241,6 +236,21 @@ export default function Registry() {
             );
           })}
         </AnimatePresence>
+      </div>
+
+      {/* Note discrète en pied de page */}
+      <div className="mt-10 sm:mt-12 text-center">
+        <p className="text-xs font-serif italic text-[#5A5040]">
+          Notre liste de mariage est également consultable sur{' '}
+          <a
+            href={realRegistryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#13263B] underline decoration-[#C4A475] underline-offset-2 hover:text-[#C4A475] transition-colors not-italic font-sans font-medium"
+          >
+            MilleMercisMariage ↗
+          </a>
+        </p>
       </div>
 
       {/* SECURE PAYMENT MODAL */}
