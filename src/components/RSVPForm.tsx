@@ -25,6 +25,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Admin dashboard state
   const [showAdmin, setShowAdmin] = useState(false);
@@ -248,16 +249,25 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedFamily || members.length === 0) {
+      alert("Veuillez d'abord rechercher et sélectionner votre foyer dans la liste des invités.");
+      return;
+    }
+
+    if (!email.trim() || !email.includes('@')) {
+      alert("Veuillez renseigner une adresse email valide pour recevoir votre confirmation.");
+      return;
+    }
+
     const payload = {
-      familyId: selectedFamily?.id,
-      familyName: selectedFamily?.familyName || searchQuery,
-      email,
+      familyId: selectedFamily.id,
+      familyName: selectedFamily.familyName,
+      email: email.trim(),
       members,
       message,
     };
 
-    // Always save to localStorage so Admin Dashboard works reliably in all production environments
-    saveRSVPToLocalStorage(payload);
+    setIsSubmitting(true);
 
     try {
       const res = await fetch('/api/rsvp', {
@@ -267,29 +277,22 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
       });
 
       if (!res.ok) {
-        // Fallback to PHP script if hosted on traditional PHP web server
-        await fetch('/api/send_rsvp_mail.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }).catch(() => {});
+        throw new Error("Une erreur est survenue lors de l'enregistrement de votre réponse.");
       }
+
+      // Save to localStorage for offline cache
+      saveRSVPToLocalStorage(payload);
 
       await fetchFamilies();
       await fetchStats();
       await fetchRSVPs();
-    } catch (err) {
-      console.error('Erreur lors de l’envoi du RSVP API, fallback exécuté', err);
-      // Fallback to PHP mail script if on classical PHP host
-      await fetch('/api/send_rsvp_mail.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).catch(() => {});
+      setIsSubmitted(true);
+    } catch (err: any) {
+      console.error('Erreur lors de l’envoi du RSVP API', err);
+      alert(err.message || "Une erreur est survenue lors de l'envoi. Veuillez réessayer ou nous contacter.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setFamilies(getStoredFamilies());
-    setIsSubmitted(true);
   };
 
 
@@ -349,7 +352,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   Merci infiniment !
                 </h3>
                 <p className="text-sm font-serif italic text-[#5A5040] max-w-md mx-auto">
-                  Votre réponse pour la {selectedFamily ? `Famille ${selectedFamily.familyName}` : 'votre famille'} a bien été enregistrée dans la base de données du mariage.
+                  Votre réponse pour la {selectedFamily ? `Famille ${selectedFamily.familyName}` : 'famille'} a bien été enregistrée dans la base de données du mariage.
                 </p>
               </div>
 
@@ -438,6 +441,11 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                     }}
                     onFocus={() => setShowSuggestions(true)}
                     onClick={(e) => (e.target as HTMLInputElement).select()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                      }
+                    }}
                     placeholder="Tapez votre nom (ex. Bénard, Chem-Lenhof, Dubois, Martin...)"
                     className="w-full pl-10 pr-4 py-3 bg-white border border-[#3B6FA0]/20 rounded-2xl text-xs text-[#13263B] font-sans focus:outline-none focus:border-[#C4A475] shadow-sm transition-colors"
                   />
@@ -803,10 +811,11 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="w-full py-4 bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-sans font-semibold uppercase text-xs tracking-[0.2em] transition-all cursor-pointer shadow-xs rounded-xl flex items-center justify-center gap-2"
+                      disabled={isSubmitting}
+                      className="w-full py-4 bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-sans font-semibold uppercase text-xs tracking-[0.2em] transition-all cursor-pointer shadow-xs rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Check className="w-4 h-4 text-[#C4A475]" />
-                      <span>{selectedFamily?.hasResponded ? 'ENREGISTRER LA MISE À JOUR' : 'ENVOYER LA CONFIRMATION DE FAMILLE'}</span>
+                      <span>{isSubmitting ? 'ENREGISTREMENT...' : (selectedFamily?.hasResponded ? 'ENREGISTRER LA MISE À JOUR' : 'ENVOYER LA CONFIRMATION DE FAMILLE')}</span>
                     </button>
                   </div>
                 </div>

@@ -135,7 +135,7 @@ export default function DynamicPhotoStack() {
 
   return (
     <div className="flex flex-col items-center justify-center p-4 my-8" ref={containerRef}>
-      
+
       {/* SECTION HEADER */}
       <div className="text-center mb-6">
         <h3 className="font-script text-[clamp(2.5rem,4.5vw,5rem)] text-[#13263B]">
@@ -171,9 +171,8 @@ export default function DynamicPhotoStack() {
             <motion.div
               key={photo.id}
               style={{ zIndex }}
-              className={`absolute w-full h-full bg-[#FAF7F2] border border-[#3B6FA0]/20 p-3.5 pb-12 rounded-2xl shadow-md flex flex-col justify-between touch-none ${
-                isTop && isInView ? 'pointer-events-auto cursor-grab active:cursor-grabbing' : 'pointer-events-none'
-              }`}
+              className={`absolute w-full h-full bg-[#FAF7F2] border border-[#3B6FA0]/20 p-3.5 pb-12 rounded-2xl shadow-md flex flex-col justify-between touch-none ${isTop && isInView ? 'pointer-events-auto cursor-grab active:cursor-grabbing' : 'pointer-events-none'
+                }`}
               initial={{
                 y: -300,
                 x: 0,
@@ -184,37 +183,37 @@ export default function DynamicPhotoStack() {
               animate={
                 isAssembled
                   ? {
+                    scale,
+                    y: yOffset,
+                    x: isTop ? 0 : xOffset,
+                    rotate: targetRotation,
+                    opacity: 1,
+                  }
+                  : (isInView
+                    ? {
                       scale,
                       y: yOffset,
                       x: isTop ? 0 : xOffset,
                       rotate: targetRotation,
                       opacity: 1,
                     }
-                  : (isInView
-                      ? {
-                          scale,
-                          y: yOffset,
-                          x: isTop ? 0 : xOffset,
-                          rotate: targetRotation,
-                          opacity: 1,
-                        }
-                      : {
-                          scale: 0.8,
-                          y: -300,
-                          x: 0,
-                          rotate: initialDropRotation,
-                          opacity: 0,
-                        })
+                    : {
+                      scale: 0.8,
+                      y: -300,
+                      x: 0,
+                      rotate: initialDropRotation,
+                      opacity: 0,
+                    })
               }
               transition={
                 isAssembled
                   ? { duration: 0.35, ease: 'easeOut' }
                   : {
-                      type: 'spring',
-                      stiffness: 85,
-                      damping: 14,
-                      delay: dropDelay,
-                    }
+                    type: 'spring',
+                    stiffness: 85,
+                    damping: 14,
+                    delay: dropDelay,
+                  }
               }
               whileHover={
                 isTop
@@ -274,7 +273,7 @@ export default function DynamicPhotoStack() {
         </button>
 
         <span className="font-serif italic text-xs text-[#5A5040]">
-          Glissez ou cliquez pour passer à la photo suivante (8 photos)
+          Glissez ou cliquez pour passer à la photo suivante
         </span>
 
         <button
