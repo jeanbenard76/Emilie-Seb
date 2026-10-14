@@ -239,9 +239,13 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
         if (presenceHtml === "") presenceHtml = `<span style="font-weight: 500; color: #13263B;">Sera présent(e)</span>`;
       }
 
+      const dietaryHtml = (m.isAttending && m.dietaryNotes && m.dietaryNotes.trim())
+        ? `<br><span style="font-weight: 500; color: #13263B;">Régime particulier :</span> ${esc(m.dietaryNotes.trim())}`
+        : "";
+
       return `<div style="margin-bottom: 16px; font-size: 15px;">
         <span style="font-weight: 500; color: #1c2833;">${esc(m.firstName)} ${esc(m.lastName)}</span><br>
-        <span style="color: #6c7a89; font-size: 14px; font-style: italic; line-height: 1.5; display: inline-block; margin-top: 2px;">${presenceHtml}</span>
+        <span style="color: #6c7a89; font-size: 14px; font-style: italic; line-height: 1.5; display: inline-block; margin-top: 2px;">${presenceHtml}${dietaryHtml}</span>
       </div>`;
     })
     .join("");
@@ -333,7 +337,8 @@ ${introText}
 À titre de confirmation, voici ce que nous avons noté :
 ${data.members.map((m) => {
   if (!m.isAttending) return `- ${m.firstName} ${m.lastName} : Ne sera malheureusement pas des nôtres`;
-  return `- ${m.firstName} ${m.lastName} : Présent(e) (${eventsOf(m)})`;
+  const dietStr = m.dietaryNotes && m.dietaryNotes.trim() ? ` [Régime : ${m.dietaryNotes.trim()}]` : '';
+  return `- ${m.firstName} ${m.lastName} : Présent(e) (${eventsOf(m)})${dietStr}`;
 }).join('\n')}
 
 Si le moindre imprévu venait modifier ces informations, n’hésitez pas à nous en faire part sur le site internet ou en répondant simplement à ce courriel.
