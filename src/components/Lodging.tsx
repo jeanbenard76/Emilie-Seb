@@ -28,7 +28,7 @@ interface LodgingCard {
 }
 
 const AIRBNB_OHERVILLE_URL = "https://www.airbnb.fr/s/Le-Domaine-du-Manoir-d'Auffay--Promenade-du-Ch%C3%A2teau--Oherville/homes?checkin=2027-04-17&checkout=2027-04-18";
-const BOOKING_OHERVILLE_URL = "https://www.booking.com/searchresults.fr.html?ss=Oherville%2C+Normandie%2C+France&checkin=2027-04-17&checkout=2027-04-18&group_adults=2&no_rooms=1&group_children=0";
+const BOOKING_OHERVILLE_URL = "https://www.booking.com/searchresults.fr.html?ss=Le+Domaine+du+Manoir+d%27Auffay&dest_type=latlong&latitude=49.729212&longitude=0.6818054&checkin=2027-04-17&checkout=2027-04-18&group_adults=2&no_rooms=1&group_children=0";
 
 const LODGING_CAROUSEL: LodgingCard[] = [
   {
