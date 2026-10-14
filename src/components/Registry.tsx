@@ -80,14 +80,14 @@ export default function Registry() {
         </h3>
         <div className="w-12 sm:w-16 h-[1px] bg-[#C4A475] mx-auto my-3 sm:my-4" />
         <p className="font-serif italic text-[#3B6FA0] text-xs sm:text-base mt-2 max-w-2xl mx-auto leading-relaxed px-2">
-          Votre présence à nos côtés lors de cette journée est notre plus beau présent. Si vous désirez néanmoins nous accompagner dans l’accomplissement de nos projets de vie futurs, vous trouverez ci-dessous notre carnet d’intentions, façonné à notre image (également accessible sur{' '}
+          Votre présence à nos côtés lors de cette journée est notre plus beau présent. Si vous désirez néanmoins nous accompagner dans l’accomplissement de nos projets de vie futurs, vous trouverez ci-dessous notre carnet d’intentions, façonné à notre image (également accessible{' '}
           <a
             href={realRegistryUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#13263B] underline decoration-[#C4A475] underline-offset-2 hover:text-[#C4A475] transition-colors not-italic font-sans font-medium"
+            className="text-[#13263B] underline decoration-[#C4A475] underline-offset-2 hover:text-[#C4A475] transition-colors font-medium"
           >
-            MilleMercisMariage ↗
+            ici
           </a>
           ).
         </p>
