@@ -128,10 +128,8 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const handleSelectFamily = (fam: GuestFamily) => {
     setSelectedFamily(fam);
     setSearchQuery(`Famille ${fam.familyName}`);
-    setEmail(fam.email || '');
-    if (fam.lastMessage) {
-      setMessage(fam.lastMessage);
-    }
+    setEmail(fam.hasResponded ? (fam.email || '') : '');
+    setMessage(fam.hasResponded ? (fam.lastMessage || '') : '');
 
     const sanitizedMembers = fam.members.map((m) => {
       const inv = m.invitedTo || { vinHonneur: true, repasNoces: true, brunchLendemain: true };
@@ -170,6 +168,8 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
         events: { vinHonneur: true, repasNoces: true, brunchLendemain: true },
       },
     ]);
+    setEmail('');
+    setMessage('');
     setShowSuggestions(false);
   };
 
@@ -411,6 +411,8 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   setSelectedFamily(null);
                   setSearchQuery('');
                   setMembers([]);
+                  setEmail('');
+                  setMessage('');
                 }}
                 className="px-6 py-2.5 border border-[#13263B]/30 hover:border-[#13263B] text-[#13263B] text-xs uppercase tracking-wider font-semibold rounded-full transition-all cursor-pointer"
               >
@@ -437,6 +439,8 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                       if (!e.target.value) {
                         setSelectedFamily(null);
                         setMembers([]);
+                        setEmail('');
+                        setMessage('');
                       }
                     }}
                     onFocus={() => setShowSuggestions(true)}
@@ -812,10 +816,16 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-4 bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-sans font-semibold uppercase text-xs tracking-[0.2em] transition-all cursor-pointer shadow-xs rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-4 px-4 bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-sans font-semibold uppercase text-xs tracking-[0.15em] sm:tracking-[0.2em] transition-all cursor-pointer shadow-xs rounded-xl flex items-center justify-center gap-2 text-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Check className="w-4 h-4 text-[#C4A475]" />
-                      <span>{isSubmitting ? 'ENREGISTREMENT...' : (selectedFamily?.hasResponded ? 'ENREGISTRER LA MISE À JOUR' : 'ENVOYER LA CONFIRMATION DE FAMILLE')}</span>
+                      <Check className="w-4 h-4 text-[#C4A475] shrink-0" />
+                      <span className="text-center">
+                        {isSubmitting
+                          ? 'ENREGISTREMENT...'
+                          : (selectedFamily?.hasResponded
+                            ? 'ENREGISTRER LA MISE À JOUR'
+                            : 'ENVOYER LA CONFIRMATION')}
+                      </span>
                     </button>
                   </div>
                 </div>
