@@ -47,7 +47,7 @@ export const STORY_STEPS: StoryStep[] = [
       "En 2019, nous déménageons tous les deux à Paris. Valentine rejoint son frère dans une colocation de l'Avenue de Versailles, tandis que Jean s'installe dans un studio avec vue Tour Eiffel (en sortant bien la tête de la fenêtre)! Nous arrivons au lycée Jean-Baptiste-Say, dans une classe de prépa PT de 45 élèves, dont seulement 20 % de filles. Deux ans de cours, de devoirs et de concours commencent alors.",
     valentineSays: "J'arrive dans cette top prépa avec un objectif : réussir les concours sans redoubler, et avoir AU MOINS les Arts & Métiers, mais pour ça, il faut bien travailler.",
     jeanSays:
-      "J'arrive à Paris sans savoir ce qui m'attend pour ces deux années de prépa. Je commence comme interne-externe avec l'espoir d'intégrer les Arts et Métiers.",
+      "J'arrive à Paris sans savoir ce qui m'attend pour ces deux années de prépa. Je rentre comme interne-externe avec l'espoir d'intégrer les Arts et Métiers.",
     iconName: 'GraduationCap',
   },
   {

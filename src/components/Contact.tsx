@@ -84,7 +84,7 @@ export default function Contact() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
-        
+
         {/* Left Column: Direct Phone Contacts */}
         <div className="lg:col-span-5 flex flex-col">
           <div className="bg-[#FFFEF5] border border-[#3B6FA0]/15 rounded-2xl p-6 sm:p-8 shadow-sm flex-1">
@@ -99,9 +99,9 @@ export default function Contact() {
                   <h5 className="font-display font-semibold text-base text-[#1A3A5C]">
                     Valentine Chem-Lenhof <span className="text-xs text-[#5A5040]/70 font-serif italic">(La Mariée)</span>
                   </h5>
-                  <a href="tel:+33612345678" className="inline-flex items-center gap-1.5 mt-1 text-xs font-mono font-semibold text-[#3B6FA0] hover:text-[#1A3A5C] transition-colors">
+                  <a href="tel:+33766055416" className="inline-flex items-center gap-1.5 mt-1 text-xs font-mono font-semibold text-[#3B6FA0] hover:text-[#1A3A5C] transition-colors">
                     <Phone className="w-3.5 h-3.5" />
-                    <span>+33 6 12 34 56 78</span>
+                    <span>+33 7 66 05 54 16</span>
                   </a>
                 </div>
               </div>
@@ -112,9 +112,9 @@ export default function Contact() {
                   <h5 className="font-display font-semibold text-base text-[#1A3A5C]">
                     Jean Benard <span className="text-xs text-[#5A5040]/70 font-serif italic">(Le Marié)</span>
                   </h5>
-                  <a href="tel:+33687654321" className="inline-flex items-center gap-1.5 mt-1 text-xs font-mono font-semibold text-[#3B6FA0] hover:text-[#1A3A5C] transition-colors">
+                  <a href="tel:+33687600977" className="inline-flex items-center gap-1.5 mt-1 text-xs font-mono font-semibold text-[#3B6FA0] hover:text-[#1A3A5C] transition-colors">
                     <Phone className="w-3.5 h-3.5" />
-                    <span>+33 6 87 65 43 21</span>
+                    <span>+33 6 87 60 09 77</span>
                   </a>
                 </div>
               </div>
@@ -186,21 +186,21 @@ export default function Contact() {
             </AnimatePresence>
 
             <form onSubmit={handleSubmit} className="space-y-5 text-left">
-                {errorMessage && (
-                  <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-200">
-                    {errorMessage}
-                  </div>
-                )}
-                {/* Honeypot field (hidden from real users) */}
-                <input 
-                  type="text" 
-                  name="website" 
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                  className="hidden" 
-                  tabIndex={-1} 
-                  autoComplete="off" 
-                />
+              {errorMessage && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 border border-red-200">
+                  {errorMessage}
+                </div>
+              )}
+              {/* Honeypot field (hidden from real users) */}
+              <input
+                type="text"
+                name="website"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                className="hidden"
+                tabIndex={-1}
+                autoComplete="off"
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label htmlFor="contact-name" className="block text-xs font-serif uppercase tracking-wider text-[#1A3A5C] font-semibold mb-1.5">
