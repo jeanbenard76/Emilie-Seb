@@ -28,7 +28,7 @@ interface LodgingCard {
 }
 
 const AIRBNB_OHERVILLE_URL = "https://www.airbnb.fr/s/Le-Domaine-du-Manoir-d'Auffay--Promenade-du-Ch%C3%A2teau--Oherville/homes?checkin=2027-04-17&checkout=2027-04-18";
-const BOOKING_OHERVILLE_URL = "https://www.booking.com/searchresults.fr.html?ss=Le+Domaine+du+Manoir+d%27Auffay&dest_type=latlong&latitude=49.729212&longitude=0.6818054&checkin=2027-04-17&checkout=2027-04-18&group_adults=2&no_rooms=1&group_children=0";
+const BOOKING_OHERVILLE_URL = "https://www.booking.com/searchresults.fr.html?ss=Oherville%2C+Normandie%2C+France&checkin=2027-04-17&checkout=2027-04-18&group_adults=2&no_rooms=1&group_children=0";
 
 const LODGING_CAROUSEL: LodgingCard[] = [
   {
@@ -42,7 +42,7 @@ const LODGING_CAROUSEL: LodgingCard[] = [
     minNights: 1,
     capacity: 2,
     highlights: ["Linge à disposition", "Proche Manoir", "Petit-déjeuner"],
-    link: "https://www.booking.com/hotel/fr/essentiel-oherville.fr.html?aid=304142&label=gen173nr-10CAQoggJCGHNlYXJjaF9vaGVydmlsbGUsIGZyYW5jZUgNWARoTYgBAZgBM7gBF8gBDNgBA-gBAfgBAYgCAagCAbgC2O7S0wbAAgHSAiRiMGJkZTc2Yi1mYmNlLTQyZTUtOWE4ZS03ZGIxNWYxMTFlNTPYAgHgAgE&ucfs=1&checkin=2027-04-17&checkout=2027-04-18&dest_id=-1455744&dest_type=city&group_adults=2&no_rooms=1&group_children=0&srpvid=7da0746cd4340596&srepoch=1786034165&all_sr_blocks=1349142501_407252890_2_2_0&highlighted_blocks=1349142501_407252890_2_2_0&matching_block_id=1349142501_407252890_2_2_0&atlas_src=sr_iw_title",
+    link: "https://www.booking.com/hotel/fr/essentiel-oherville.fr.html?checkin=2027-04-17&checkout=2027-04-18",
   },
   {
     id: 'gite-durdent',
@@ -55,7 +55,7 @@ const LODGING_CAROUSEL: LodgingCard[] = [
     minNights: 1,
     capacity: 6,
     highlights: ["3 chambres", "Parking privé", "Jardin"],
-    link: "https://www.booking.com/hotel/fr/gite-de-la-durdent.fr.html?aid=304142&label=gen173nr-10CAQoggJCGHNlYXJjaF9vaGVydmlsbGUsIGZyYW5jZUgNWARoTYgBAZgBM7gBF8gBDNgBA-gBAfgBAYgCAagCAbgC2O7S0wbAAgHSAiRiMGJkZTc2Yi1mYmNlLTQyZTUtOWE4ZS03ZGIxNWYxMTFlNTPYAgHgAgE&ucfs=1&checkin=2027-04-17&checkout=2027-04-18&dest_id=-1455744&dest_type=city&group_adults=2&no_rooms=1&group_children=0&srpvid=7da0746cd4340596&srepoch=1786034165&all_sr_blocks=1176860701_390210577_6_0_0&highlighted_blocks=1176860701_390210577_6_0_0&matching_block_id=1176860701_390210577_6_0_0&atlas_src=sr_iw_title",
+    link: "https://www.booking.com/hotel/fr/gite-de-la-durdent.fr.html?checkin=2027-04-17&checkout=2027-04-18",
   },
   {
     id: 'hericourt-durdent',
