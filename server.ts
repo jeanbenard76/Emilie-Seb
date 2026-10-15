@@ -23,6 +23,7 @@ import {
   updateFamily,
   addContactMessage,
   getAllContactMessages,
+  clearAllContactMessages,
 } from "./server/db";
 import { sendRSVPNotificationEmail, sendContactNotificationEmail } from "./server/mailer";
 
@@ -97,15 +98,16 @@ async function startServer() {
   app.post("/api/rsvp", rsvpRateLimit, async (req, res) => {
   try {
     const { familyId, familyName, email, message, members } = req.body;
-    if (!familyName || !email || !Array.isArray(members)) {
+    if (!familyName || !Array.isArray(members)) {
       return res
         .status(400)
-        .json({ error: "Champs requis manquants (familyName, email, members)" });
+        .json({ error: "Champs requis manquants (familyName, members)" });
     }
-    const result = submitRSVP({ familyId, familyName, email, message, members });
+    const safeEmail = typeof email === 'string' ? email.trim() : '';
+    const result = submitRSVP({ familyId, familyName, email: safeEmail, message, members });
 
     // Transmit response notification email to valentinetjean@etik.com
-    sendRSVPNotificationEmail({ familyName, email, message, members }).catch((err) => {
+    sendRSVPNotificationEmail({ familyName, email: safeEmail, message, members }).catch((err) => {
       console.error("Erreur envoi notification email RSVP:", err);
     });
 
@@ -274,6 +276,16 @@ async function startServer() {
   app.get("/api/admin/contact-messages", requireAdmin, (req, res) => {
     try {
       res.json(getAllContactMessages());
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Clear all contact form messages
+  app.post("/api/admin/clear-contact-messages", requireAdmin, (req, res) => {
+    try {
+      const result = clearAllContactMessages();
+      res.json(result);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

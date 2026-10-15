@@ -259,7 +259,9 @@ export async function sendRSVPNotificationEmail(data: RSVPMailPayload) {
       <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
         <div style="flex: 1; min-width: 200px; background-color: #f1f5f9; padding: 12px 16px; border-radius: 6px;">
           <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Contact</p>
-          <p style="margin: 4px 0 0 0; font-size: 15px; color: #0f172a; font-weight: 500;"><a href="mailto:${esc(data.email)}" style="color: #2563eb; text-decoration: none;">${esc(data.email)}</a></p>
+          <p style="margin: 4px 0 0 0; font-size: 15px; color: #0f172a; font-weight: 500;">
+            ${data.email && data.email.trim() ? `<a href="mailto:${esc(data.email)}" style="color: #2563eb; text-decoration: none;">${esc(data.email)}</a>` : '<span style="color: #64748b; font-style: italic;">Non renseigné</span>'}
+          </p>
         </div>
         <div style="flex: 1; min-width: 150px; background-color: #f1f5f9; padding: 12px 16px; border-radius: 6px;">
           <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Bilan</p>
@@ -349,30 +351,35 @@ Dans l’attente de célébrer ce moment précieux à vos côtés,
 Valentine & Jean — 17 Avril 2027`;
 
   const coupleText = `Nouvelle réponse RSVP : Famille ${data.familyName}
-Contact : ${data.email}
+Contact : ${data.email?.trim() || 'Non renseigné'}
 Bilan : ${attendingCount} présent(s) sur ${totalCount}
 ${data.message ? `Message joint : « ${data.message} »\n` : ''}
 Détail des membres :
 ${data.members.map((m) => `- ${m.firstName} ${m.lastName} (${m.isChild ? 'Enfant' : 'Adulte'}) : ${m.isAttending ? 'PRÉSENT(E) - ' + eventsOf(m) : 'ABSENT(E)'}${m.dietaryNotes ? ' [Régime: ' + m.dietaryNotes + ']' : ''}`).join('\n')}`;
 
-  await sendAll([
+  const mails: Parameters<typeof sendMail>[0][] = [
     {
       to: COUPLE_RSVP_ADDRESS,
-      replyTo: data.email,
+      replyTo: data.email?.trim() ? data.email.trim() : undefined,
       subject: `💍 Nouvelle réponse RSVP : Famille ${data.familyName}`,
       html: coupleHtml,
       text: coupleText,
       attachments: mailAttachmentsWithLogo,
     },
-    {
-      to: data.email,
+  ];
+
+  if (data.email && data.email.trim() && data.email.includes('@')) {
+    mails.push({
+      to: data.email.trim(),
       replyTo: COUPLE_RSVP_ADDRESS,
       subject: "[RSVP Mariage de Valentine & Jean] Merci pour votre réponse.",
       html: guestHtml,
       text: guestText,
       attachments: mailAttachmentsWithLogo,
-    },
-  ]);
+    });
+  }
+
+  await sendAll(mails);
 }
 
 /**

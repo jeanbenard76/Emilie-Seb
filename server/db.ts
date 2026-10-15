@@ -434,10 +434,11 @@ export function updateFamilyInvitations(familyId: string, invitedVin: boolean, i
 export function clearAllRSVPs() {
   if (!db) throw new Error('Database not initialized');
 
-  // 1. Clear rsvps, families, and members tables
+  // 1. Clear rsvps, families, members, and contact_messages tables
   db.exec('DELETE FROM rsvps');
   db.exec('DELETE FROM members');
   db.exec('DELETE FROM families');
+  db.exec('DELETE FROM contact_messages');
 
   // 2. Re-seed default initial guest families list
   seedInitialFamilies(db);
@@ -445,6 +446,16 @@ export function clearAllRSVPs() {
   saveDatabaseToDisk();
   console.log('[SQLite] Base de données réinitialisée à neuf dans wedding.db.');
   return { success: true, message: 'Toutes les réponses ont été supprimées et la base réinitialisée.' };
+}
+
+/**
+ * Clear all contact messages from database.
+ */
+export function clearAllContactMessages() {
+  if (!db) throw new Error('Database not initialized');
+  db.exec('DELETE FROM contact_messages');
+  saveDatabaseToDisk();
+  return { success: true, message: 'Tous les messages reçus ont été supprimés.' };
 }
 
 /**

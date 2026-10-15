@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, X, Search, User, Baby, Footprints, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock } from 'lucide-react';
+import { Check, X, Search, User, Baby, Footprints, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock, Mail } from 'lucide-react';
 import ChildIcon from './ChildIcon';
 import { GuestFamily, FamilyMember } from '../types';
 import { getStoredFamilies, saveRSVPToLocalStorage } from '../utils/rsvpStorage';
@@ -26,6 +26,8 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNoEmailModal, setShowNoEmailModal] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
   // Admin dashboard state
   const [showAdmin, setShowAdmin] = useState(false);
@@ -245,24 +247,14 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
     }));
   };
 
-  // Submit RSVP to SQLite wedding.db backend or fallback storage
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedFamily || members.length === 0) {
-      alert("Veuillez d'abord rechercher et sélectionner votre foyer dans la liste des invités.");
-      return;
-    }
-
-    if (!email.trim() || !email.includes('@')) {
-      alert("Veuillez renseigner une adresse email valide pour recevoir votre confirmation.");
-      return;
-    }
+  // Execute RSVP submission
+  const executeSubmit = async (finalEmail: string) => {
+    if (!selectedFamily || members.length === 0) return;
 
     const payload = {
       familyId: selectedFamily.id,
       familyName: selectedFamily.familyName,
-      email: email.trim(),
+      email: finalEmail,
       members,
       message,
     };
@@ -286,6 +278,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
       await fetchFamilies();
       await fetchStats();
       await fetchRSVPs();
+      setSubmittedEmail(finalEmail);
       setIsSubmitted(true);
     } catch (err: any) {
       console.error('Erreur lors de l’envoi du RSVP API', err);
@@ -293,6 +286,30 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Submit RSVP to SQLite wedding.db backend or fallback storage
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedFamily || members.length === 0) {
+      alert("Veuillez d'abord rechercher et sélectionner votre foyer dans la liste des invités.");
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+    if (trimmedEmail && !trimmedEmail.includes('@')) {
+      alert("Veuillez renseigner une adresse email valide ou laisser le champ vide pour continuer sans email.");
+      return;
+    }
+
+    // Si aucun email n'est renseigné, demander confirmation via la pop-up
+    if (!trimmedEmail) {
+      setShowNoEmailModal(true);
+      return;
+    }
+
+    await executeSubmit(trimmedEmail);
   };
 
 
@@ -365,37 +382,95 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  {members.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between py-1 border-b border-dashed border-slate-200">
-                      <div className="flex items-center gap-2">
-                        {m.isBaby ? (
-                          <Baby className="w-3.5 h-3.5 text-amber-600" />
-                        ) : m.isChild ? (
-                          <ChildIcon className="w-3.5 h-3.5 text-[#C4A475]" />
-                        ) : (
-                          <User className="w-3.5 h-3.5 text-[#13263B]" />
-                        )}
-                        <span className="font-medium text-[#13263B]">
-                          {m.firstName} {m.lastName}
-                        </span>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded-full uppercase ${
-                          m.isBaby 
-                            ? 'bg-amber-100 text-amber-800 font-semibold' 
-                            : m.isChild 
-                              ? 'bg-[#C4A475]/20 text-[#8B6B38]' 
-                              : 'bg-[#13263B]/10 text-[#13263B]'
-                        }`}>
-                          {m.isBaby ? 'Bébé' : (m.isChild ? 'Enfant' : 'Adulte')}
-                        </span>
-                      </div>
+                {/* Si aucun email renseigné : rappel discret */}
+                {!submittedEmail && (
+                  <div className="p-3 bg-[#FAF7F2] border border-[#C4A475]/35 rounded-xl text-[11px] text-[#5A5040] font-sans leading-relaxed">
+                    <strong className="text-[#13263B]">Information :</strong> Aucune adresse email n’ayant été renseignée, aucun courriel récapitulatif ne vous a été envoyé. N’hésitez pas à conserver ou capturer cet écran.
+                  </div>
+                )}
 
-                      <span className={`font-semibold text-[11px] ${m.isAttending ? 'text-emerald-700' : 'text-slate-400'}`}>
-                        {m.isAttending ? '✓ Présent(e)' : '✗ Absent(e)'}
-                      </span>
-                    </div>
-                  ))}
+                <div className={`${submittedEmail ? 'space-y-2' : 'space-y-3'} text-xs`}>
+                  {members.map((m) => {
+                    const attendingEvents: string[] = [];
+                    const declinedEvents: string[] = [];
+                    if (m.isAttending) {
+                      if (m.invitedTo?.vinHonneur !== false) {
+                        if (m.events?.vinHonneur) attendingEvents.push("Vin d'Honneur");
+                        else declinedEvents.push("Vin d'Honneur");
+                      }
+                      if (m.invitedTo?.repasNoces !== false) {
+                        if (m.events?.repasNoces) attendingEvents.push("Repas de Noces");
+                        else declinedEvents.push("Repas de Noces");
+                      }
+                      if (m.invitedTo?.brunchLendemain !== false) {
+                        if (m.events?.brunchLendemain) attendingEvents.push("Brunch");
+                        else declinedEvents.push("Brunch");
+                      }
+                    }
+
+                    return (
+                      <div key={m.id} className={`py-1 border-b border-dashed border-slate-200 last:border-0 ${submittedEmail ? '' : 'space-y-1 pb-2'}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {m.isBaby ? (
+                              <Baby className="w-3.5 h-3.5 text-amber-600" />
+                            ) : m.isChild ? (
+                              <ChildIcon className="w-3.5 h-3.5 text-[#C4A475]" />
+                            ) : (
+                              <User className="w-3.5 h-3.5 text-[#13263B]" />
+                            )}
+                            <span className="font-medium text-[#13263B]">
+                              {m.firstName} {m.lastName}
+                            </span>
+                            <span className={`text-[9px] px-1.5 py-0.2 rounded-full uppercase ${
+                              m.isBaby 
+                                ? 'bg-amber-100 text-amber-800 font-semibold' 
+                                : m.isChild 
+                                  ? 'bg-[#C4A475]/20 text-[#8B6B38]' 
+                                  : 'bg-[#13263B]/10 text-[#13263B]'
+                            }`}>
+                              {m.isBaby ? 'Bébé' : (m.isChild ? 'Enfant' : 'Adulte')}
+                            </span>
+                          </div>
+
+                          <span className={`font-semibold text-[11px] ${m.isAttending ? 'text-emerald-700' : 'text-slate-400'}`}>
+                            {m.isAttending ? '✓ Présent(e)' : '✗ Absent(e)'}
+                          </span>
+                        </div>
+
+                        {/* Récapitulatif détaillé uniquement si AUCUN email n'a été renseigné */}
+                        {!submittedEmail && m.isAttending && (
+                          <div className="pl-6 text-[11px] text-[#5A5040] space-y-0.5">
+                            {attendingEvents.length > 0 && (
+                              <p>
+                                <span className="text-[#13263B] font-medium">Présence :</span> {attendingEvents.join(', ')}
+                              </p>
+                            )}
+                            {declinedEvents.length > 0 && (
+                              <p className="text-slate-500">
+                                <span className="text-[#13263B] font-medium">Non présent :</span> {declinedEvents.join(', ')}
+                              </p>
+                            )}
+                            {m.dietaryNotes && m.dietaryNotes.trim() && (
+                              <p>
+                                <span className="font-medium text-[#13263B]">Régime particulier :</span>{' '}
+                                <span className="text-[#5A5040]">{m.dietaryNotes.trim()}</span>
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+
+                {/* Message joint affiché si pas d'email */}
+                {!submittedEmail && message && message.trim() && (
+                  <div className="pt-2 border-t border-slate-100 text-[11px] text-[#5A5040]">
+                    <span className="font-semibold text-[#13263B]">Message joint :</span>{' '}
+                    <span className="italic text-slate-600">« {message.trim()} »</span>
+                  </div>
+                )}
               </div>
 
               {/* Rappel présidentielles */}
@@ -413,6 +488,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   setMembers([]);
                   setEmail('');
                   setMessage('');
+                  setSubmittedEmail('');
                 }}
                 className="px-6 py-2.5 border border-[#13263B]/30 hover:border-[#13263B] text-[#13263B] text-xs uppercase tracking-wider font-semibold rounded-full transition-all cursor-pointer"
               >
@@ -785,12 +861,12 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
               {(selectedFamily || members.length > 0) && (
                 <div className="space-y-4 pt-4 border-t border-[#3B6FA0]/15">
                   <div>
-                    <label className="block text-[11px] font-sans font-bold uppercase tracking-wider text-[#13263B] mb-2">
-                      2. ADRESSE EMAIL DE CONTACT (POUR RECEVOIR LA CONFIRMATION) *
+                    <label htmlFor="rsvp-email-input" className="block text-[11px] font-sans font-bold uppercase tracking-wider text-[#13263B] mb-2">
+                      2. ADRESSE EMAIL DE CONTACT *
                     </label>
                     <input
+                      id="rsvp-email-input"
                       type="email"
-                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="votre.email@exemple.fr"
@@ -857,6 +933,53 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* POPUP CONFIRMATION SI PAS D'EMAIL */}
+      <AnimatePresence>
+        {showNoEmailModal && (
+          <div className="fixed inset-0 bg-[#13263B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-[#3B6FA0]/15 text-center space-y-5"
+            >
+              <div className="space-y-2">
+                <h4 className="font-display text-xl sm:text-2xl text-[#13263B] font-semibold">
+                  Adresse email non renseignée
+                </h4>
+                <p className="text-xs sm:text-sm font-sans text-[#5A5040] leading-relaxed">
+                  Sans adresse email, vous ne recevrez pas de confirmation par courriel. Vous retrouverez toutefois le récapitulatif détaillé de vos choix sur l’écran suivant.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNoEmailModal(false);
+                    const input = document.getElementById('rsvp-email-input');
+                    if (input) input.focus();
+                  }}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-[#3B6FA0]/20 bg-white hover:bg-slate-50 text-[#13263B] font-semibold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  Ajouter un email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNoEmailModal(false);
+                    executeSubmit('');
+                  }}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-semibold text-xs uppercase tracking-wide transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0"
+                >
+                  Continuer sans email
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

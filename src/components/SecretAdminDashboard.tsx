@@ -752,14 +752,34 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
 
       {/* 3.5 MESSAGES RECEIVED THROUGH THE CONTACT FORM */}
       <div className="bg-white rounded-3xl border border-[#3B6FA0]/15 p-6 space-y-5 shadow-xs">
-        <div className="border-b border-slate-100 pb-4">
-          <h3 className="font-display text-xl text-[#13263B] font-semibold flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-[#C4A475]" />
-            <span>Messages reçus ({contactMessages.length})</span>
-          </h3>
-          <p className="text-xs text-[#5A5040] font-serif italic">
-            Envoyés depuis le formulaire « Écrire aux Mariés ». Répondez par e-mail à l'adresse indiquée.
-          </p>
+        <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="font-display text-xl text-[#13263B] font-semibold flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-[#C4A475]" />
+              <span>Messages reçus ({contactMessages.length})</span>
+            </h3>
+            <p className="text-xs text-[#5A5040] font-serif italic">
+              Envoyés depuis le formulaire « Écrire aux Mariés ». Répondez par e-mail à l'adresse indiquée.
+            </p>
+          </div>
+          {contactMessages.length > 0 && (
+            <button
+              onClick={async () => {
+                if (window.confirm('Voulez-vous vraiment effacer tous les messages reçus de la boîte de contact ?')) {
+                  try {
+                    await fetch('/api/admin/clear-contact-messages', { method: 'POST', headers: adminHeaders() });
+                    fetchContactMessages();
+                    alert('Les messages reçus ont été effacés avec succès.');
+                  } catch (e) {
+                    console.error('Erreur effacement messages:', e);
+                  }
+                }
+              }}
+              className="px-3.5 py-1.5 text-xs text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-xl font-medium transition-all cursor-pointer self-start sm:self-auto"
+            >
+              Effacer les messages reçus
+            </button>
+          )}
         </div>
 
         {contactMessages.length > 0 ? (
