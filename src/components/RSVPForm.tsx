@@ -358,9 +358,9 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
 
               {/* Summary breakdown box */}
               <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-[#3B6FA0]/15 rounded-2xl p-5 max-w-md mx-auto text-left space-y-3">
-                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#13263B] border-b border-[#3B6FA0]/10 pb-2">
-                  <span>Récapitulatif des confirmations</span>
-                  <span className="text-[#C4A475]">
+                <div className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wider text-[#13263B] border-b border-[#3B6FA0]/10 pb-2">
+                  <span className="leading-tight">Récapitulatif des confirmations</span>
+                  <span className="text-[#C4A475] whitespace-nowrap shrink-0">
                     {attendingAdults + attendingChildren} Présent(s)
                   </span>
                 </div>
