@@ -68,7 +68,7 @@ export function saveRSVPToLocalStorage(payload: {
       email: payload.email,
       hasResponded: true,
       respondedAt: nowIso,
-      lastMessage: payload.message !== undefined ? payload.message : (fam.lastMessage || ''),
+      lastMessage: (payload.message && payload.message.trim()) ? payload.message.trim() : (fam.lastMessage || ''),
       members: payload.members.map((m) => ({
         ...m,
         isAttending: Boolean(m.isAttending),

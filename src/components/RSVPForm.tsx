@@ -131,7 +131,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
     setSelectedFamily(fam);
     setSearchQuery(`Famille ${fam.familyName}`);
     setEmail(fam.hasResponded ? (fam.email || '') : '');
-    setMessage(fam.hasResponded ? (fam.lastMessage || '') : '');
+    setMessage('');
 
     const sanitizedMembers = fam.members.map((m) => {
       const inv = m.invitedTo || { vinHonneur: true, repasNoces: true, brunchLendemain: true };
@@ -382,12 +382,6 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   </span>
                 </div>
 
-                {/* Si aucun email renseigné : rappel discret */}
-                {!submittedEmail && (
-                  <div className="p-3 bg-[#FAF7F2] border border-[#C4A475]/35 rounded-xl text-[11px] text-[#5A5040] font-sans leading-relaxed">
-                    <strong className="text-[#13263B]">Information :</strong> Aucune adresse email n’ayant été renseignée, aucun courriel récapitulatif ne vous a été envoyé. N’hésitez pas à conserver ou capturer cet écran.
-                  </div>
-                )}
 
                 <div className={`${submittedEmail ? 'space-y-2' : 'space-y-3'} text-xs`}>
                   {members.map((m) => {
@@ -606,11 +600,6 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                       <p className="text-xs font-sans font-medium text-[#3B6FA0] mt-1.5">
                         Vous pouvez encore modifier vos choix ci-dessous et enregistrer votre mise à jour.
                       </p>
-                      {selectedFamily.lastMessage && (
-                        <p className="text-xs font-serif text-[#3B6FA0] italic mt-1.5 bg-white/80 p-2 rounded-lg border border-[#C4A475]/20">
-                          Message transmis : « {selectedFamily.lastMessage} »
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>

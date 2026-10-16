@@ -184,7 +184,7 @@ export function getAllFamiliesWithMembers() {
     }
 
     const rsvpRes = db!.exec(
-      "SELECT created_at, message FROM rsvps WHERE family_id = ? ORDER BY created_at DESC LIMIT 1",
+      "SELECT created_at FROM rsvps WHERE family_id = ? ORDER BY created_at DESC LIMIT 1",
       [fam.id]
     );
 
@@ -201,7 +201,14 @@ export function getAllFamiliesWithMembers() {
     if (rsvpRes.length && rsvpRes[0].values.length > 0) {
       hasResponded = true;
       respondedAt = rsvpRes[0].values[0][0];
-      lastMessage = (rsvpRes[0].values[0][1] as string) || '';
+    }
+
+    const msgRes = db!.exec(
+      "SELECT message FROM rsvps WHERE family_id = ? AND message IS NOT NULL AND trim(message) != '' ORDER BY created_at DESC LIMIT 1",
+      [fam.id]
+    );
+    if (msgRes.length && msgRes[0].values.length > 0) {
+      lastMessage = (msgRes[0].values[0][0] as string) || '';
     }
 
     return {
