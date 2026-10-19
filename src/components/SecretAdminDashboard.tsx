@@ -233,6 +233,24 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     }
   };
 
+  // Scope of families for the top breakdown cards (dynamically filtered by active host or search filter)
+  const breakdownFamilies = useMemo(() => {
+    return families.filter((fam) => {
+      // 1. Host Filter
+      if (filterHost === 'unassigned' && fam.invitedBy) return false;
+      if (filterHost !== 'all' && filterHost !== 'unassigned' && fam.invitedBy !== filterHost) return false;
+
+      // 2. Search Query (if searching for a name, also filter breakdown metrics)
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
+        const nameMatch = fam.familyName.toLowerCase().includes(q) || fam.members.some((m) => `${m.firstName} ${m.lastName}`.toLowerCase().includes(q));
+        if (!nameMatch) return false;
+      }
+
+      return true;
+    });
+  }, [families, filterHost, search]);
+
   // Compute breakdown of Adults & Children per Event
   const eventBreakdown = useMemo(() => {
     let vinAdults = 0, vinChildren = 0, vinBabies = 0;
@@ -244,13 +262,15 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     let totalNotRespondedMembers = 0;
     let totalAbsentAdults = 0, totalAbsentChildren = 0, totalAbsentBabies = 0;
 
+    let totalInvitedMembers = 0;
     let totalInvitedAdults = 0, totalInvitedChildren = 0, totalInvitedBabies = 0;
     let vinInvitedAdults = 0, vinInvitedChildren = 0, vinInvitedBabies = 0;
     let repasInvitedAdults = 0, repasInvitedChildren = 0, repasInvitedBabies = 0;
     let brunchInvitedAdults = 0, brunchInvitedChildren = 0, brunchInvitedBabies = 0;
 
-    families.forEach((fam) => {
+    breakdownFamilies.forEach((fam) => {
       fam.members.forEach((m) => {
+        totalInvitedMembers++;
         if (m.isBaby) totalInvitedBabies++;
         else if (m.isChild) totalInvitedChildren++;
         else totalInvitedAdults++;
@@ -321,6 +341,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     });
 
     return {
+      totalInvitedMembers,
       totalAdultsAttending,
       totalChildrenAttending,
       totalBabiesAttending,
@@ -354,7 +375,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       totalAbsentChildren,
       totalAbsentBabies
     };
-  }, [families]);
+  }, [breakdownFamilies]);
 
 
   // Compute breakdown by host (Invité par)
@@ -485,10 +506,22 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
 
       {/* 2. REPARTITION EXACTE DES ADULTES & ENFANTS PAR TYPE DE REPAS / ÉVÉNEMENT */}
       <div className="space-y-3">
-        <h3 className="font-display text-xl text-[#13263B] font-semibold flex items-center gap-2">
-          <Users className="w-5 h-5 text-[#C4A475]" />
-          <span>Décompte par Type de Repas (Adultes vs Enfants)</span>
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h3 className="font-display text-xl text-[#13263B] font-semibold flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#C4A475]" />
+            <span>Décompte par Type de Repas (Adultes vs Enfants)</span>
+          </h3>
+          {(filterHost !== 'all' || search.trim()) && (
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#13263B] text-white self-start sm:self-auto font-sans flex items-center gap-1.5 shadow-2xs">
+              <span>Filtre :</span>
+              <span className="text-[#C4A475] font-bold">
+                {filterHost === 'Valentine&Jean' ? 'Valentine & Jean' : filterHost === 'Anny&Marc' ? 'Anny & Marc' : filterHost === 'Anne&Visith' ? 'Anne & Visith' : filterHost === 'unassigned' ? 'À catégoriser' : ''}
+                {search.trim() ? (filterHost !== 'all' ? ` + « ${search.trim()} »` : `« ${search.trim()} »`) : ''}
+              </span>
+              <span className="opacity-75 font-mono text-[11px]">({breakdownFamilies.length} fam. / {eventBreakdown.totalInvitedMembers} pers.)</span>
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           
@@ -502,7 +535,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                 {eventBreakdown.totalRespondedMembers}
               </span>
               <span className="text-xs font-mono text-slate-500">
-                / {stats?.totalInvited || 0} ont répondu
+                / {eventBreakdown.totalInvitedMembers} ont répondu
               </span>
             </div>
             <div className="pt-2 border-t border-slate-100 text-xs text-[#5A5040] font-sans space-y-0.5">
@@ -527,7 +560,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                 {eventBreakdown.totalAdultsAttending + eventBreakdown.totalChildrenAttending + eventBreakdown.totalBabiesAttending}
               </span>
               <span className="text-xs font-mono text-slate-500">
-                / {stats?.totalInvited || 0} invités
+                / {eventBreakdown.totalInvitedMembers} invités
               </span>
             </div>
             <div className="pt-2 border-t border-slate-100 text-xs text-[#5A5040] font-sans space-y-0.5">
@@ -690,7 +723,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
               <option value="Valentine&Jean">Valentine &amp; Jean</option>
               <option value="Anny&Marc">Anny &amp; Marc</option>
               <option value="Anne&Visith">Anne &amp; Visith</option>
-              <option value="unassigned">⚠️ À catégoriser</option>
+              <option value="unassigned">À catégoriser</option>
             </select>
           </div>
         </div>
@@ -718,7 +751,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                 : 'bg-blue-50 text-[#13263B] border border-blue-200 hover:bg-blue-100'
             }`}
           >
-            <span>💌 Valentine &amp; Jean</span>
+            <span>Valentine &amp; Jean</span>
             <span className="text-[10px] opacity-80 font-mono">({hostStats.vj.families} fam. / {hostStats.vj.guests} pers.)</span>
           </button>
           <button
@@ -729,7 +762,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                 : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
             }`}
           >
-            <span>🌸 Anny &amp; Marc</span>
+            <span>Anny &amp; Marc</span>
             <span className="text-[10px] opacity-80 font-mono">({hostStats.am.families} fam. / {hostStats.am.guests} pers.)</span>
           </button>
           <button
@@ -740,7 +773,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                 : 'bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100'
             }`}
           >
-            <span>🌿 Anne &amp; Visith</span>
+            <span>Anne &amp; Visith</span>
             <span className="text-[10px] opacity-80 font-mono">({hostStats.av.families} fam. / {hostStats.av.guests} pers.)</span>
           </button>
           {hostStats.unassigned.families > 0 && (
@@ -752,7 +785,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                   : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
               }`}
             >
-              <span>⚠️ À catégoriser</span>
+              <span>À catégoriser</span>
               <span className="text-[10px] font-mono">({hostStats.unassigned.families} fam.)</span>
             </button>
           )}
@@ -802,10 +835,10 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                         }`}
                         title="Qui a invité cette famille ? Cliquez pour changer rapidement"
                       >
-                        <option value="">⚠️ Hôte : à définir</option>
-                        <option value="Valentine&Jean">💌 Valentine &amp; Jean</option>
-                        <option value="Anny&Marc">🌸 Anny &amp; Marc</option>
-                        <option value="Anne&Visith">🌿 Anne &amp; Visith</option>
+                        <option value="">Hôte : à définir</option>
+                        <option value="Valentine&Jean">Valentine &amp; Jean</option>
+                        <option value="Anny&Marc">Anny &amp; Marc</option>
+                        <option value="Anne&Visith">Anne &amp; Visith</option>
                       </select>
 
                       {isResponded ? (
