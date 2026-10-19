@@ -30,6 +30,7 @@ import {
   sendRSVPNotificationEmail,
   sendContactNotificationEmail,
   sendHostRecapEmails,
+  generateHostRecapExcel,
 } from "./server/mailer";
 
 async function startServer() {
@@ -398,6 +399,140 @@ async function startServer() {
         'attachment; filename="liste_invites_mariage.csv"'
       );
       res.status(200).send("\uFEFF" + csv);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Export beautifully formatted weekly Excel report on demand
+  app.get("/api/admin/export-recap-excel", requireAdmin, async (req, res) => {
+    try {
+      const allFamilies = getAllFamiliesWithMembers();
+      const hostParam = (req.query.host as string) || "all";
+
+      const OFFICIAL_HOSTS: Record<string, string> = {
+        "Valentine&Jean": "Valentine & Jean",
+        "Anny&Marc": "Anny & Marc",
+        "Anne&Visith": "Anne & Visith",
+        "all": "Tous les Invités",
+      };
+
+      const hostLabel = OFFICIAL_HOSTS[hostParam] || hostParam;
+      const families = hostParam === "all" ? allFamilies : allFamilies.filter((f) => f.invitedBy === hostParam);
+
+      let totalInvited = 0;
+      let totalAdults = 0;
+      let totalChildren = 0;
+      let totalBabies = 0;
+
+      let nonConfirmeCount = 0;
+      let nonConfirmeAdults = 0;
+      let nonConfirmeChildren = 0;
+      let nonConfirmeBabies = 0;
+
+      let presentsCount = 0;
+      let presentAdults = 0;
+      let presentChildren = 0;
+      let presentBabies = 0;
+      let vinCount = 0, vinAdults = 0, vinChildren = 0, vinBabies = 0;
+      let repasCount = 0, repasAdults = 0, repasChildren = 0, repasBabies = 0;
+      let brunchCount = 0, brunchAdults = 0, brunchChildren = 0, brunchBabies = 0;
+
+      let absentsCount = 0;
+      let absentAdults = 0;
+      let absentChildren = 0;
+      let absentBabies = 0;
+
+      families.forEach((fam) => {
+        const isResponded = Boolean(
+          fam.hasResponded ||
+          fam.respondedAt ||
+          fam.notes === "has_responded" ||
+          (fam.lastMessage && fam.lastMessage.trim().length > 0)
+        );
+
+        fam.members.forEach((m: any) => {
+          totalInvited++;
+          if (m.isBaby) totalBabies++;
+          else if (m.isChild) totalChildren++;
+          else totalAdults++;
+
+          if (isResponded) {
+            if (m.isAttending) {
+              presentsCount++;
+              if (m.isBaby) presentBabies++;
+              else if (m.isChild) presentChildren++;
+              else presentAdults++;
+
+              const invitedVin = m.invitedTo ? m.invitedTo.vinHonneur !== false : true;
+              const invitedRepas = m.invitedTo ? Boolean(m.invitedTo.repasNoces) : Boolean(m.events?.repasNoces);
+              const invitedBrunch = m.invitedTo ? Boolean(m.invitedTo.brunchLendemain) : Boolean(m.events?.brunchLendemain);
+
+              if (invitedVin && m.events?.vinHonneur) {
+                vinCount++;
+                if (m.isBaby) vinBabies++;
+                else if (m.isChild) vinChildren++;
+                else vinAdults++;
+              }
+              if (invitedRepas && m.events?.repasNoces) {
+                repasCount++;
+                if (m.isBaby) repasBabies++;
+                else if (m.isChild) repasChildren++;
+                else repasAdults++;
+              }
+              if (invitedBrunch && m.events?.brunchLendemain) {
+                brunchCount++;
+                if (m.isBaby) brunchBabies++;
+                else if (m.isChild) brunchChildren++;
+                else brunchAdults++;
+              }
+            } else {
+              absentsCount++;
+              if (m.isBaby) absentBabies++;
+              else if (m.isChild) absentChildren++;
+              else absentAdults++;
+            }
+          } else {
+            nonConfirmeCount++;
+            if (m.isBaby) nonConfirmeBabies++;
+            else if (m.isChild) nonConfirmeChildren++;
+            else nonConfirmeAdults++;
+          }
+        });
+      });
+
+      const now = new Date();
+      const dateFormatted = new Intl.DateTimeFormat("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Paris",
+      }).format(now).replace(":", "h");
+
+      const buffer = await generateHostRecapExcel(hostLabel, families, {
+        totalFamilies: families.length,
+        totalInvited, totalAdults, totalChildren, totalBabies,
+        presentsCount, presentAdults, presentChildren, presentBabies,
+        nonConfirmeCount, nonConfirmeAdults, nonConfirmeChildren, nonConfirmeBabies,
+        absentsCount, absentAdults, absentChildren, absentBabies,
+        vinCount, vinAdults, vinChildren, vinBabies,
+        repasCount, repasAdults, repasChildren, repasBabies,
+        brunchCount, brunchAdults, brunchChildren, brunchBabies,
+        dateFormatted,
+      });
+
+      const cleanName = hostLabel
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "_")
+        .replace(/_+/g, "_");
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="Recapitulatif_Invites_${cleanName}.xlsx"`);
+      res.status(200).send(buffer);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

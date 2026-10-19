@@ -6,7 +6,7 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import fs from "fs";
 import path from "path";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export interface RSVPMailPayload {
   familyName: string;
@@ -607,12 +607,120 @@ function formatMemberPresenceText(m: any): string {
   return parts.length > 0 ? parts.join(" | ") : "Sera présent(e)";
 }
 
-function generateHostRecapExcel(hostLabel: string, families: any[], stats: any): Buffer {
-  const wb = XLSX.utils.book_new();
+function getStatusStyle(val: any): { fontColor: string; bgColor: string } | null {
+  if (!val) return null;
+  const norm = String(val).trim().toLowerCase();
 
-  // Feuille 1 : Liste détaillée des invités
-  const rows: any[] = [];
-  families.forEach((fam) => {
+  // 1. Présent (Vert sur fond vert)
+  if (norm.includes("présent") && !norm.includes("non présent")) {
+    return {
+      fontColor: "FF166534", // vert émeraude foncé soutenu
+      bgColor: "FFDCFCE7",   // vert menthe pastel clair
+    };
+  }
+
+  // 2. Absent / Non présent (Bleu sur fond bleu)
+  if (norm.includes("absent") || norm.includes("non présent")) {
+    return {
+      fontColor: "FF1E40AF", // bleu royal / marine soutenu
+      bgColor: "FFDBEAFE",   // bleu clair pastel
+    };
+  }
+
+  // 3. Non confirmé / En attente (Jaune sur fond jaune)
+  if (
+    norm.includes("non confirmé") ||
+    norm.includes("non confirme") ||
+    norm.includes("en attente") ||
+    norm.includes("attente")
+  ) {
+    return {
+      fontColor: "FF92400E", // ambre / jaune foncé soutenu
+      bgColor: "FFFEF3C7",   // jaune clair pastel
+    };
+  }
+
+  // 4. Non invité (Gris sur fond gris)
+  if (norm.includes("non invité") || norm.includes("non invite")) {
+    return {
+      fontColor: "FF64748B", // gris ardoise moyen
+      bgColor: "FFF1F5F9",   // gris très clair doux
+    };
+  }
+
+  return null;
+}
+
+export async function generateHostRecapExcel(hostLabel: string, families: any[], stats: any): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Mariage Valentine & Jean";
+  wb.lastModifiedBy = "Bot Récapitulatif Vendredi 20h";
+  wb.created = new Date();
+  wb.modified = new Date();
+
+  // ----------------------------------------------------
+  // FEUILLE 1 : LISTE DES INVITÉS
+  // ----------------------------------------------------
+  const wsInvites = wb.addWorksheet("Liste des Invités", {
+    views: [{ state: "frozen", ySplit: 1 }],
+  });
+
+  const columns = [
+    { header: "Famille", key: "famille", width: 24 },
+    { header: "Prénom", key: "prenom", width: 20 },
+    { header: "Nom", key: "nom", width: 20 },
+    { header: "Catégorie", key: "categorie", width: 14 },
+    { header: "Statut Réponse", key: "statut", width: 26 },
+    { header: "Vin d'Honneur", key: "vin", width: 20 },
+    { header: "Repas de Noces", key: "repas", width: 20 },
+    { header: "Brunch", key: "brunch", width: 20 },
+    { header: "Régime / Allergies", key: "regime", width: 30 },
+    { header: "Email de contact", key: "email", width: 28 },
+    { header: "Date réponse", key: "date", width: 22 },
+  ];
+
+  wsInvites.columns = columns;
+
+  // LIGNE 1 : EN-TÊTE (Gras, centré, fond gris, filtre activé)
+  const headerRow = wsInvites.getRow(1);
+  headerRow.height = 28;
+  headerRow.eachCell({ includeEmpty: true }, (cell) => {
+    cell.font = {
+      name: "Calibri",
+      size: 11,
+      bold: true,
+      color: { argb: "FF0F172A" }, // Slate 900
+    };
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "center",
+      wrapText: true,
+    };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE2E8F0" }, // Fond gris demandé
+    };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FF94A3B8" } },
+      bottom: { style: "medium", color: { argb: "FF475569" } },
+      left: { style: "thin", color: { argb: "FFCBD5E1" } },
+      right: { style: "thin", color: { argb: "FFCBD5E1" } },
+    };
+  });
+
+  // Activation du filtre automatique sur la première ligne
+  wsInvites.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: columns.length },
+  };
+
+  // DONNÉES : Segmente chaque famille, rien de gras
+  const sortedFamilies = [...families].sort((a, b) =>
+    (a.familyName || "").localeCompare(b.familyName || "", "fr", { sensitivity: "base" })
+  );
+
+  sortedFamilies.forEach((fam, famIdx) => {
     const isResponded = Boolean(
       fam.hasResponded ||
       fam.respondedAt ||
@@ -620,7 +728,13 @@ function generateHostRecapExcel(hostLabel: string, families: any[], stats: any):
       (fam.lastMessage && fam.lastMessage.trim().length > 0)
     );
 
-    fam.members.forEach((m: any) => {
+    // Teinte neutre alternée par foyer pour renforcer la segmentation visuelle
+    const familyBaseBg = famIdx % 2 === 0 ? "FFFFFFFF" : "FFF8FAFC";
+    const members = fam.members && fam.members.length > 0 ? fam.members : [{}];
+
+    members.forEach((m: any, memberIdx: number) => {
+      const isLastMember = memberIdx === members.length - 1;
+
       const typeStr = m.isBaby ? "Bébé" : (m.isChild ? "Enfant" : "Adulte");
       let statutReponse = "Non confirmé";
       let presenceVin = "Non invité";
@@ -650,67 +764,257 @@ function generateHostRecapExcel(hostLabel: string, families: any[], stats: any):
         if (invitedBrunch) presenceBrunch = "Invité (en attente)";
       }
 
-      rows.push({
-        "Famille": fam.familyName,
-        "Prénom": m.firstName,
-        "Nom": m.lastName,
-        "Catégorie": typeStr,
-        "Statut Réponse": statutReponse,
-        "Vin d'Honneur": presenceVin,
-        "Repas de Noces": presenceRepas,
-        "Brunch": presenceBrunch,
-        "Régime / Allergies": m.dietaryNotes && m.dietaryNotes.trim() ? m.dietaryNotes.trim() : "-",
-        "Email de contact": fam.email ? fam.email : "-",
-        "Date réponse": fam.respondedAt ? fam.respondedAt : "-",
+      const firstNameVal = (m.firstName || "").trim();
+      const lastNameVal = (m.lastName || "").trim();
+      const isFirstNameEmpty = firstNameVal.length === 0;
+      const isLastNameEmpty = lastNameVal.length === 0;
+
+      const rowValues = {
+        famille: fam.familyName || "-",
+        prenom: firstNameVal,
+        nom: lastNameVal,
+        categorie: typeStr,
+        statut: statutReponse,
+        vin: presenceVin,
+        repas: presenceRepas,
+        brunch: presenceBrunch,
+        regime: m.dietaryNotes && m.dietaryNotes.trim() ? m.dietaryNotes.trim() : "-",
+        email: fam.email ? fam.email : "-",
+        date: fam.respondedAt ? fam.respondedAt : "-",
+      };
+
+      const row = wsInvites.addRow(rowValues);
+      row.height = 22;
+
+      // Bordure basse : marquée (medium) sur le dernier membre de la famille pour segmenter chaque famille
+      const bottomBorderStyle = isLastMember ? "medium" : "thin";
+      const bottomBorderColor = isLastMember ? "FF64748B" : "FFE2E8F0";
+
+      const defaultBorder: Partial<ExcelJS.Borders> = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: bottomBorderStyle, color: { argb: bottomBorderColor } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+
+      // STRICTEMENT AUCUN GRAS DANS LES DONNÉES ("puis rien de gras")
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        cell.font = {
+          name: "Calibri",
+          size: 10.5,
+          bold: false, // Rien de gras
+          color: { argb: "FF1E293B" },
+        };
+        cell.border = defaultBorder;
+
+        // Fond par défaut de la famille
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: familyBaseBg },
+        };
+
+        // Alignement et colorations spécifiques
+        if (colNumber === 1) {
+          // Famille
+          cell.alignment = { vertical: "middle", horizontal: "left" };
+        } else if (colNumber === 2) {
+          // Prénom (Si vide -> fond rouge)
+          cell.alignment = { vertical: "middle", horizontal: "left" };
+          if (isFirstNameEmpty) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFEE2E2" }, // Fond rouge clair
+            };
+            cell.font = {
+              name: "Calibri",
+              size: 10.5,
+              bold: false,
+              color: { argb: "FF991B1B" }, // Texte rouge foncé
+            };
+            cell.border = {
+              ...defaultBorder,
+              left: { style: "thin", color: { argb: "FFF87171" } },
+              right: { style: "thin", color: { argb: "FFF87171" } },
+            };
+          }
+        } else if (colNumber === 3) {
+          // Nom (Si vide -> fond rouge)
+          cell.alignment = { vertical: "middle", horizontal: "left" };
+          if (isLastNameEmpty) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFEE2E2" }, // Fond rouge clair
+            };
+            cell.font = {
+              name: "Calibri",
+              size: 10.5,
+              bold: false,
+              color: { argb: "FF991B1B" }, // Texte rouge foncé
+            };
+            cell.border = {
+              ...defaultBorder,
+              left: { style: "thin", color: { argb: "FFF87171" } },
+              right: { style: "thin", color: { argb: "FFF87171" } },
+            };
+          }
+        } else if (colNumber === 4) {
+          // Catégorie
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        } else if (colNumber >= 5 && colNumber <= 8) {
+          // Statut Réponse, Vin d'Honneur, Repas de Noces, Brunch
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+          const style = getStatusStyle(cell.value);
+          if (style) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: style.bgColor },
+            };
+            cell.font = {
+              name: "Calibri",
+              size: 10.5,
+              bold: false, // Rien de gras
+              color: { argb: style.fontColor },
+            };
+          }
+        } else if (colNumber === 9) {
+          // Régime / Allergies
+          cell.alignment = { vertical: "middle", horizontal: "left" };
+        } else if (colNumber === 10) {
+          // Email de contact
+          cell.alignment = { vertical: "middle", horizontal: "left" };
+        } else if (colNumber === 11) {
+          // Date réponse
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        }
       });
     });
   });
 
-  const wsInvites = XLSX.utils.json_to_sheet(rows.length > 0 ? rows : [{ "Information": "Aucun invité pour cet hôte." }]);
-  wsInvites["!cols"] = [
-    { wch: 22 }, // Famille
-    { wch: 18 }, // Prénom
-    { wch: 18 }, // Nom
-    { wch: 12 }, // Catégorie
-    { wch: 24 }, // Statut Réponse
-    { wch: 18 }, // Vin d'Honneur
-    { wch: 18 }, // Repas de Noces
-    { wch: 18 }, // Brunch
-    { wch: 26 }, // Régime / Allergies
-    { wch: 28 }, // Email
-    { wch: 20 }, // Date réponse
-  ];
-  XLSX.utils.book_append_sheet(wb, wsInvites, "Liste des Invités");
+  // ----------------------------------------------------
+  // FEUILLE 2 : SYNTHÈSE & DÉCOMPTE
+  // ----------------------------------------------------
+  const wsSynthese = wb.addWorksheet("Synthèse & Décompte");
 
-  // Feuille 2 : Synthèse & Décompte
-  const syntheseData = [
-    ["RÉCAPITULATIF DES INVITÉS — MARIAGE VALENTINE & JEAN 2027"],
-    ["Hôte", hostLabel],
-    ["Date de génération", stats.dateFormatted],
-    [],
-    ["INDICATEUR", "TOTAL", "ADULTES", "ENFANTS", "BÉBÉS"],
-    ["Total Invités", stats.totalInvited, stats.totalAdults, stats.totalChildren, stats.totalBabies],
-    ["Présents", stats.presentsCount, stats.presentAdults, stats.presentChildren, stats.presentBabies],
-    ["Non Confirmés (en attente)", stats.nonConfirmeCount, stats.nonConfirmeAdults, stats.nonConfirmeChildren, stats.nonConfirmeBabies],
-    ["Absents", stats.absentsCount, stats.absentAdults, stats.absentChildren, stats.absentBabies],
-    [],
-    ["DÉCOMPTE PAR REPAS (PRÉSENTS)", "TOTAL", "ADULTES", "ENFANTS", "BÉBÉS"],
+  wsSynthese.columns = [
+    { width: 34 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+  ];
+
+  // Titre principal
+  const titleRow = wsSynthese.addRow(["MARIAGE VALENTINE & JEAN 2027 — RÉCAPITULATIF DES INVITÉS"]);
+  titleRow.height = 32;
+  wsSynthese.mergeCells("A1:E1");
+  const titleCell = wsSynthese.getCell("A1");
+  titleCell.font = { name: "Calibri", size: 13, bold: true, color: { argb: "FFFFFFFF" } };
+  titleCell.alignment = { vertical: "middle", horizontal: "center" };
+  titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF13263B" } };
+
+  // Métadonnées
+  const r2 = wsSynthese.addRow(["Hôte", hostLabel]);
+  r2.font = { name: "Calibri", size: 10.5, bold: false };
+  r2.getCell(1).font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FF475569" } };
+
+  const r3 = wsSynthese.addRow(["Date de génération", stats.dateFormatted]);
+  r3.font = { name: "Calibri", size: 10.5, bold: false };
+  r3.getCell(1).font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FF475569" } };
+
+  wsSynthese.addRow([]); // Espaceur
+
+  // TABLEAU 1 : INDICATEURS GLOBAUX
+  const t1Header = wsSynthese.addRow(["INDICATEUR", "TOTAL", "ADULTES", "ENFANTS", "BÉBÉS"]);
+  t1Header.height = 26;
+  t1Header.eachCell({ includeEmpty: true }, (c) => {
+    c.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FF0F172A" } };
+    c.alignment = { vertical: "middle", horizontal: "center" };
+    c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+    c.border = {
+      top: { style: "thin", color: { argb: "FF94A3B8" } },
+      bottom: { style: "medium", color: { argb: "FF475569" } },
+      left: { style: "thin", color: { argb: "FFCBD5E1" } },
+      right: { style: "thin", color: { argb: "FFCBD5E1" } },
+    };
+  });
+
+  const t1Rows = [
+    ["Total Invités", stats.totalInvited, stats.totalAdults, stats.totalChildren, stats.totalBabies, null],
+    ["Présents", stats.presentsCount, stats.presentAdults, stats.presentChildren, stats.presentBabies, "present"],
+    ["Non Confirmés (en attente)", stats.nonConfirmeCount, stats.nonConfirmeAdults, stats.nonConfirmeChildren, stats.nonConfirmeBabies, "pending"],
+    ["Absents", stats.absentsCount, stats.absentAdults, stats.absentChildren, stats.absentBabies, "absent"],
+  ];
+
+  t1Rows.forEach(([label, total, ad, enf, bb, type]) => {
+    const row = wsSynthese.addRow([label, total, ad, enf, bb]);
+    row.height = 22;
+    row.eachCell({ includeEmpty: true }, (c, colIdx) => {
+      c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF1E293B" } };
+      c.alignment = { vertical: "middle", horizontal: colIdx === 1 ? "left" : "center" };
+      c.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+
+      if (type === "present") {
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0FDF4" } };
+        if (colIdx === 1) c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF166534" } };
+      } else if (type === "pending") {
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFBEB" } };
+        if (colIdx === 1) c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF92400E" } };
+      } else if (type === "absent") {
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFF6FF" } };
+        if (colIdx === 1) c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF1E40AF" } };
+      }
+    });
+  });
+
+  wsSynthese.addRow([]); // Espaceur
+
+  // TABLEAU 2 : DÉCOMPTE PAR REPAS
+  const t2Header = wsSynthese.addRow(["DÉCOMPTE PAR REPAS (PRÉSENTS)", "TOTAL", "ADULTES", "ENFANTS", "BÉBÉS"]);
+  t2Header.height = 26;
+  t2Header.eachCell({ includeEmpty: true }, (c) => {
+    c.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FF0F172A" } };
+    c.alignment = { vertical: "middle", horizontal: "center" };
+    c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+    c.border = {
+      top: { style: "thin", color: { argb: "FF94A3B8" } },
+      bottom: { style: "medium", color: { argb: "FF475569" } },
+      left: { style: "thin", color: { argb: "FFCBD5E1" } },
+      right: { style: "thin", color: { argb: "FFCBD5E1" } },
+    };
+  });
+
+  const t2Rows = [
     ["Vin d'Honneur", stats.vinCount, stats.vinAdults, stats.vinChildren, stats.vinBabies],
     ["Repas de Noces", stats.repasCount, stats.repasAdults, stats.repasChildren, stats.repasBabies],
     ["Brunch du Lendemain", stats.brunchCount, stats.brunchAdults, stats.brunchChildren, stats.brunchBabies],
   ];
 
-  const wsSynthese = XLSX.utils.aoa_to_sheet(syntheseData);
-  wsSynthese["!cols"] = [
-    { wch: 32 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-  ];
-  XLSX.utils.book_append_sheet(wb, wsSynthese, "Synthèse & Décompte");
+  t2Rows.forEach(([label, total, ad, enf, bb]) => {
+    const row = wsSynthese.addRow([label, total, ad, enf, bb]);
+    row.height = 22;
+    row.eachCell({ includeEmpty: true }, (c, colIdx) => {
+      c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF1E293B" } };
+      c.alignment = { vertical: "middle", horizontal: colIdx === 1 ? "left" : "center" };
+      c.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+    });
+  });
 
-  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  const buffer = await wb.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 }
 
 export interface HostRecapSummary {
@@ -1114,7 +1418,7 @@ ${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)}
 Valentine & Jean — 17 Avril 2027
 Bot de suivi hebdomadaire du vendredi 20h`;
 
-    const excelBuffer = generateHostRecapExcel(host.label, families, {
+    const excelBuffer = await generateHostRecapExcel(host.label, families, {
       totalFamilies: families.length,
       totalInvited,
       totalAdults,

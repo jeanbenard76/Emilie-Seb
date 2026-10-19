@@ -1050,7 +1050,25 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       )}
 
       {/* 4. FILE DOWNLOAD BUTTONS & RESET ACTION */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <a
+          href={`/api/admin/export-recap-excel?host=all&key=${encodeURIComponent(getAdminToken())}`}
+          download="Recapitulatif_Invites_Tous.xlsx"
+          className="p-5 bg-[#13263B] hover:bg-[#C4A475] text-white hover:text-[#13263B] rounded-2xl font-sans text-xs font-semibold flex items-center justify-between group transition-all shadow-2xs cursor-pointer"
+          title="Télécharger l'export Excel avec mise en forme propre, couleurs (vert/jaune/bleu/gris/rouge) et segmentation par foyer"
+        >
+          <div className="flex items-center gap-3">
+            <FileSpreadsheet className="w-6 h-6 text-[#C4A475] group-hover:text-[#13263B]" />
+            <div className="text-left">
+              <span className="block font-bold text-sm">Export Excel Hebdo</span>
+              <span className="text-[11px] font-serif italic opacity-80">
+                Fichier stylisé (vendredi 20h)
+              </span>
+            </div>
+          </div>
+          <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
+        </a>
+
         <button
           onClick={() => {
             let csv = "ID Famille,Famille,Invité par,Prénom,Nom,Statut,Âge,Présent,Vin d'Honneur,Repas de Noces,Brunch,Régime/Allergies,Email\n";
@@ -1076,18 +1094,18 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
             link.click();
             document.body.removeChild(link);
           }}
-          className="p-5 bg-[#13263B] hover:bg-[#C4A475] text-white hover:text-[#13263B] rounded-2xl font-sans text-xs font-semibold flex items-center justify-between group transition-all shadow-2xs cursor-pointer"
+          className="p-5 bg-white border border-[#3B6FA0]/20 hover:border-[#13263B] text-[#13263B] rounded-2xl font-sans text-xs font-semibold flex items-center justify-between group transition-all shadow-2xs cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <FileSpreadsheet className="w-6 h-6 text-[#C4A475] group-hover:text-[#13263B]" />
+            <FileSpreadsheet className="w-6 h-6 text-[#3B6FA0]" />
             <div className="text-left">
-              <span className="block font-bold text-sm">Exporter en CSV / Excel</span>
-              <span className="text-[11px] font-serif italic opacity-80">
+              <span className="block font-bold text-sm">Exporter en CSV</span>
+              <span className="text-[11px] font-serif italic text-[#5A5040]">
                 Pour le traiteur
               </span>
             </div>
           </div>
-          <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
+          <Download className="w-5 h-5 text-[#3B6FA0] group-hover:translate-y-0.5 transition-transform" />
         </button>
 
         <a
