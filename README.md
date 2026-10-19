@@ -68,7 +68,8 @@ L'image finale ne contient que les dépendances de production. `src/data/registr
 | Variable | Obligatoire | Rôle |
 |---|---|---|
 | `NODE_ENV=production` | oui | mode production du serveur |
-| `ADMIN_TOKEN` | oui | mot de passe de l'Espace Mariés et des routes admin. Sans elle, les routes admin renvoient 503 (bloquées par défaut). |
+| `ADMIN_TOKEN` | oui | mot de passe admin **restreint** : accès à l'Espace Mariés avec **mots optionnels et messages masqués** (idéal pour partager aux hôtes). |
+| `ADMIN_FULL_TOKEN` | conseillé | 2ème mot de passe admin **complet** : accès mariés avec **tous les mots optionnels et messages visibles**. |
 | `DB_PATH=/data/wedding.db` | oui | emplacement du fichier SQLite **sur le volume persistant** |
 | `EMAIL_ADDRESS` | oui (pour les mails) | adresse Infomaniak qui envoie, ex. `valentinetjean@etik.com` |
 | `EMAIL_PASSWORD` | oui (pour les mails) | **mot de passe d'application** Infomaniak (Manager → Service Mail → l'adresse → Appareils → Ajouter un appareil), pas le mot de passe principal. Sans ces deux variables, aucun mail ne part mais le site fonctionne. |

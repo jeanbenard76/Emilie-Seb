@@ -692,11 +692,6 @@ export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCou
               </li>
             `).join('')}
           </ul>
-          ${family.lastMessage && family.lastMessage.trim() ? `
-            <div style="margin-top: 10px; padding: 8px 12px; background-color: #f0fdf4; border-radius: 6px; font-size: 13px; color: #166534; font-style: italic;">
-              💬 « ${esc(family.lastMessage.trim())} »
-            </div>
-          ` : ''}
         </div>
       `).join('');
 
@@ -717,11 +712,6 @@ export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCou
               </li>
             `).join('')}
           </ul>
-          ${family.lastMessage && family.lastMessage.trim() ? `
-            <div style="margin-top: 10px; padding: 8px 12px; background-color: #fef2f2; border-radius: 6px; font-size: 13px; color: #991b1b; font-style: italic;">
-              💬 « ${esc(family.lastMessage.trim())} »
-            </div>
-          ` : ''}
         </div>
       `).join('');
 
@@ -889,14 +879,14 @@ ${f.members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m
 ==================================================
 ${presentFamilies.length === 0 ? 'Aucune présence confirmée pour le moment.' : presentFamilies.map(({ family, members }) => `
 * Famille ${family.familyName} :
-${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : ${eventsOf(m)}${m.dietaryNotes ? ' [Régime: ' + m.dietaryNotes + ']' : ''}`).join('\n')}${family.lastMessage ? '\n  Message: « ' + family.lastMessage + ' »' : ''}`).join('\n')}
+${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : ${eventsOf(m)}${m.dietaryNotes ? ' [Régime: ' + m.dietaryNotes + ']' : ''}`).join('\n')}`).join('\n')}
 
 ==================================================
 3. SECTION "ABSENTS" (${absentsCount} personnes)
 ==================================================
 ${absentFamilies.length === 0 ? 'Aucun absent déclaré.' : absentFamilies.map(({ family, members }) => `
 * Famille ${family.familyName} :
-${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : Absent(e)`).join('\n')}${family.lastMessage ? '\n  Message: « ' + family.lastMessage + ' »' : ''}`).join('\n')}
+${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : Absent(e)`).join('\n')}`).join('\n')}
 
 --------------------------------------------------
 Valentine & Jean — 17 Avril 2027

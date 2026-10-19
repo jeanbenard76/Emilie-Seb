@@ -37,25 +37,57 @@ async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
   const IS_PROD = process.env.NODE_ENV === "production";
   const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+  const ADMIN_FULL_TOKEN = process.env.ADMIN_FULL_TOKEN;
 
   app.use(express.json());
 
   // Initialize SQLite wedding.db database
   await initDatabase();
 
-  // Protect sensitive routes (guest data & destructive actions) with ADMIN_TOKEN.
+  // Helper to determine admin access level
+  const getAdminAccess = (provided: unknown): { authed: boolean; isFull: boolean } => {
+    // If in development mode and neither token is set, grant full access
+    if (!ADMIN_TOKEN && !ADMIN_FULL_TOKEN) {
+      if (IS_PROD) return { authed: false, isFull: false };
+      return { authed: true, isFull: true };
+    }
+
+    if (typeof provided !== "string" || !provided.trim()) {
+      return { authed: false, isFull: false };
+    }
+
+    const token = provided.trim();
+
+    // 1. Super / Full Admin token (can see optional words & private messages)
+    if (ADMIN_FULL_TOKEN && token === ADMIN_FULL_TOKEN) {
+      return { authed: true, isFull: true };
+    }
+
+    // 2. Standard / Restricted Admin token (hides optional words)
+    if (ADMIN_TOKEN && token === ADMIN_TOKEN) {
+      return { authed: true, isFull: false };
+    }
+
+    return { authed: false, isFull: false };
+  };
+
+  // Protect sensitive routes (guest data & destructive actions) with ADMIN_TOKEN or ADMIN_FULL_TOKEN.
   // Token accepted via "x-admin-token" header or "?key=" query param (for download links).
   const requireAdmin: express.RequestHandler = (req, res, next) => {
-    if (!ADMIN_TOKEN) {
-      if (IS_PROD) {
-        return res.status(503).json({
-          error: "ADMIN_TOKEN non configuré sur le serveur : accès admin désactivé.",
-        });
-      }
-      return next(); // pas de token exigé en développement local
+    if (!ADMIN_TOKEN && !ADMIN_FULL_TOKEN && IS_PROD) {
+      return res.status(503).json({
+        error: "ADMIN_TOKEN / ADMIN_FULL_TOKEN non configurés sur le serveur : accès admin désactivé.",
+      });
     }
-    const provided = req.headers["x-admin-token"] || req.query.key;
-    if (provided === ADMIN_TOKEN) return next();
+
+    const provided = (req.headers["x-admin-token"] || req.query.key) as string | undefined;
+    const access = getAdminAccess(provided);
+
+    if (access.authed) {
+      (req as any).isAdminFull = access.isFull;
+      return next();
+    }
+
     res.status(401).json({ error: "Accès non autorisé." });
   };
 
@@ -81,18 +113,29 @@ async function startServer() {
 
   // Verify admin password (used by the dashboard login popup)
   app.get("/api/admin/verify", requireAdmin, (req, res) => {
-    res.json({ ok: true });
+    const isFull = Boolean((req as any).isAdminFull);
+    res.json({ ok: true, canSeeOptionalNotes: isFull });
   });
 
   // Get all families or search by query
   app.get("/api/families", (req, res) => {
     try {
+      const provided = (req.headers["x-admin-token"] || req.query.key) as string | undefined;
+      const access = getAdminAccess(provided);
+
       const { q } = req.query;
-      if (typeof q === "string" && q.trim()) {
-        const results = searchFamilies(q);
-        return res.json(results);
+      let families = typeof q === "string" && q.trim()
+        ? searchFamilies(q)
+        : getAllFamiliesWithMembers();
+
+      // Si l'utilisateur n'a pas accès complet, on masque le mot optionnel (lastMessage)
+      if (!access.isFull) {
+        families = families.map((fam: any) => ({
+          ...fam,
+          lastMessage: "",
+        }));
       }
-      const families = getAllFamiliesWithMembers();
+
       res.json(families);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -282,16 +325,27 @@ async function startServer() {
   // Get all RSVP logs
   app.get("/api/rsvps", requireAdmin, (req, res) => {
     try {
-      const rsvps = getAllRSVPs();
+      const isFull = Boolean((req as any).isAdminFull);
+      let rsvps = getAllRSVPs();
+      if (!isFull) {
+        rsvps = rsvps.map((r: any) => ({
+          ...r,
+          message: "",
+        }));
+      }
       res.json(rsvps);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
   });
 
-  // Get all contact form messages
+  // Get all contact form messages (visible only to full admin)
   app.get("/api/admin/contact-messages", requireAdmin, (req, res) => {
     try {
+      const isFull = Boolean((req as any).isAdminFull);
+      if (!isFull) {
+        return res.json([]);
+      }
       res.json(getAllContactMessages());
     } catch (err: any) {
       res.status(500).json({ error: err.message });

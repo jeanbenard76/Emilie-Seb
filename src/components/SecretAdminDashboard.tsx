@@ -75,16 +75,20 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [editingFamily, setEditingFamily] = useState<GuestFamily | null>(null);
   const [sendingRecap, setSendingRecap] = useState(false);
+  const [canSeeOptionalNotes, setCanSeeOptionalNotes] = useState(false);
 
   // Authentication gate: null = checking, true = dashboard (native browser prompt)
   const [authed, setAuthed] = useState<boolean | null>(null);
 
-  const verifyToken = async (token: string): Promise<{ ok: boolean; error?: string }> => {
+  const verifyToken = async (token: string): Promise<{ ok: boolean; canSeeOptionalNotes?: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/admin/verify', {
         headers: token ? { 'x-admin-token': token } : {},
       });
-      if (res.ok) return { ok: true };
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { ok: true, canSeeOptionalNotes: Boolean(data.canSeeOptionalNotes) };
+      }
       if (res.status === 503) {
         const data = await res.json().catch(() => ({} as any));
         return { ok: false, error: data.error || 'ADMIN_TOKEN non configuré sur le serveur.' };
@@ -115,7 +119,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
 
   const fetchFamilies = async () => {
     try {
-      const res = await fetch('/api/families');
+      const res = await fetch('/api/families', { headers: adminHeaders() });
       if (res.ok) {
         const text = await res.text();
         try {
@@ -153,6 +157,9 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     (async () => {
       currentToken = '';
       let result = await verifyToken(''); // passes only in dev (no ADMIN_TOKEN required)
+      if (result.ok) {
+        setCanSeeOptionalNotes(Boolean(result.canSeeOptionalNotes));
+      }
       let message = 'Espace Mariés — mot de passe :';
       while (!result.ok) {
         if (result.error && result.error !== 'incorrect') {
@@ -168,6 +175,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
         result = await verifyToken(pwd.trim());
         if (result.ok) {
           currentToken = pwd.trim();
+          setCanSeeOptionalNotes(Boolean(result.canSeeOptionalNotes));
         } else {
           message = 'Mot de passe incorrect, réessayez :';
         }
@@ -495,6 +503,15 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 Base SQLite active (wedding.db)
               </span>
+              {canSeeOptionalNotes ? (
+                <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 font-mono border border-amber-300">
+                  👑 Accès complet (mots optionnels visibles)
+                </span>
+              ) : (
+                <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 font-mono border border-slate-300">
+                  🔒 Accès restreint (mots optionnels masqués)
+                </span>
+              )}
             </div>
             <p className="font-serif italic text-xs text-[#5A5040] mt-0.5">
               Page secrète réservée aux mariés pour faire vos requêtes sur qui a répondu, décompter adultes &amp; enfants par repas, et exporter les fichiers.
@@ -951,8 +968,8 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                     ))}
                   </div>
 
-                  {/* Message if left */}
-                  {fam.lastMessage && (
+                  {/* Message if left — visible only for full admin */}
+                  {canSeeOptionalNotes && fam.lastMessage && (
                     <div className="text-xs font-serif italic text-[#3B6FA0] bg-white p-2.5 rounded-xl border border-slate-200 flex items-start gap-2">
                       <MessageSquare className="w-3.5 h-3.5 text-[#C4A475] shrink-0 mt-0.5" />
                       <span>« {fam.lastMessage} »</span>
@@ -969,66 +986,68 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
         </div>
       </div>
 
-      {/* 3.5 MESSAGES RECEIVED THROUGH THE CONTACT FORM */}
-      <div className="bg-white rounded-3xl border border-[#3B6FA0]/15 p-6 space-y-5 shadow-xs">
-        <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h3 className="font-display text-xl text-[#13263B] font-semibold flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-[#C4A475]" />
-              <span>Messages reçus ({contactMessages.length})</span>
-            </h3>
-            <p className="text-xs text-[#5A5040] font-serif italic">
-              Envoyés depuis le formulaire « Écrire aux Mariés ». Répondez par e-mail à l'adresse indiquée.
-            </p>
-          </div>
-          {contactMessages.length > 0 && (
-            <button
-              onClick={async () => {
-                if (window.confirm('Voulez-vous vraiment effacer tous les messages reçus de la boîte de contact ?')) {
-                  try {
-                    await fetch('/api/admin/clear-contact-messages', { method: 'POST', headers: adminHeaders() });
-                    fetchContactMessages();
-                    alert('Les messages reçus ont été effacés avec succès.');
-                  } catch (e) {
-                    console.error('Erreur effacement messages:', e);
+      {/* 3.5 MESSAGES RECEIVED THROUGH THE CONTACT FORM (VISIBLE UNIQUEMENT POUR L'ADMIN COMPLET) */}
+      {canSeeOptionalNotes && (
+        <div className="bg-white rounded-3xl border border-[#3B6FA0]/15 p-6 space-y-5 shadow-xs">
+          <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="font-display text-xl text-[#13263B] font-semibold flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-[#C4A475]" />
+                <span>Messages reçus ({contactMessages.length})</span>
+              </h3>
+              <p className="text-xs text-[#5A5040] font-serif italic">
+                Envoyés depuis le formulaire « Écrire aux Mariés ». Répondez par e-mail à l'adresse indiquée.
+              </p>
+            </div>
+            {contactMessages.length > 0 && (
+              <button
+                onClick={async () => {
+                  if (window.confirm('Voulez-vous vraiment effacer tous les messages reçus de la boîte de contact ?')) {
+                    try {
+                      await fetch('/api/admin/clear-contact-messages', { method: 'POST', headers: adminHeaders() });
+                      fetchContactMessages();
+                      alert('Les messages reçus ont été effacés avec succès.');
+                    } catch (e) {
+                      console.error('Erreur effacement messages:', e);
+                    }
                   }
-                }
-              }}
-              className="px-3.5 py-1.5 text-xs text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-xl font-medium transition-all cursor-pointer self-start sm:self-auto"
-            >
-              Effacer les messages reçus
-            </button>
+                }}
+                className="px-3.5 py-1.5 text-xs text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 rounded-xl font-medium transition-all cursor-pointer self-start sm:self-auto"
+              >
+                Effacer les messages reçus
+              </button>
+            )}
+          </div>
+
+          {contactMessages.length > 0 ? (
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {contactMessages.map((msg) => (
+                <div key={msg.id} className="p-4 bg-[#FAF7F2] rounded-2xl border border-slate-200 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-display font-semibold text-[#13263B]">{msg.name}</span>
+                      <a href={`mailto:${msg.email}`} className="text-xs font-mono text-[#3B6FA0] hover:text-[#13263B] underline">
+                        {msg.email}
+                      </a>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-500">{formatDate(msg.created_at)}</span>
+                  </div>
+                  {msg.subject && (
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-[#C4A475]">
+                      {CONTACT_SUBJECT_LABELS[msg.subject] || msg.subject}
+                    </span>
+                  )}
+                  <p className="text-sm text-[#13263B] whitespace-pre-line">{msg.message}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500 font-serif italic text-center py-8">
+              Aucun message reçu pour le moment.
+            </p>
           )}
         </div>
-
-        {contactMessages.length > 0 ? (
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-            {contactMessages.map((msg) => (
-              <div key={msg.id} className="p-4 bg-[#FAF7F2] rounded-2xl border border-slate-200 space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-display font-semibold text-[#13263B]">{msg.name}</span>
-                    <a href={`mailto:${msg.email}`} className="text-xs font-mono text-[#3B6FA0] hover:text-[#13263B] underline">
-                      {msg.email}
-                    </a>
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-500">{formatDate(msg.created_at)}</span>
-                </div>
-                {msg.subject && (
-                  <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-[#C4A475]">
-                    {CONTACT_SUBJECT_LABELS[msg.subject] || msg.subject}
-                  </span>
-                )}
-                <p className="text-sm text-[#13263B] whitespace-pre-line">{msg.message}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-slate-500 font-serif italic text-center py-8">
-            Aucun message reçu pour le moment.
-          </p>
-        )}
-      </div>
+      )}
 
       {/* 4. FILE DOWNLOAD BUTTONS & RESET ACTION */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
