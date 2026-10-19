@@ -500,6 +500,112 @@ function memberTypeText(m: any): string {
   return "(Adulte)";
 }
 
+function formatMemberPresenceHtml(m: any): string {
+  if (!m.isAttending) {
+    return `<span style="font-weight: 500; color: #991b1b;">Ne sera malheureusement pas des nôtres</span>`;
+  }
+
+  const attendingEvents: string[] = [];
+  const declinedEvents: string[] = [];
+
+  const invitedVin = m.invitedTo ? m.invitedTo.vinHonneur !== false : true;
+  if (invitedVin) {
+    if (m.events?.vinHonneur) attendingEvents.push("Vin d'Honneur");
+    else declinedEvents.push("Vin d'Honneur");
+  }
+
+  const invitedRepas = m.invitedTo ? Boolean(m.invitedTo.repasNoces) : Boolean(m.events?.repasNoces);
+  if (invitedRepas) {
+    if (m.events?.repasNoces) attendingEvents.push("Repas de Noces");
+    else declinedEvents.push("Repas de Noces");
+  }
+
+  const invitedBrunch = m.invitedTo ? Boolean(m.invitedTo.brunchLendemain) : Boolean(m.events?.brunchLendemain);
+  if (invitedBrunch) {
+    if (m.events?.brunchLendemain) attendingEvents.push("Brunch");
+    else declinedEvents.push("Brunch");
+  }
+
+  const formatAttending = (evs: string[]) => {
+    if (evs.length === 1) return `au ${evs[0]}`;
+    if (evs.length === 2) return `au ${evs[0]} et au ${evs[1]}`;
+    return `au ${evs[0]}, au ${evs[1]} et au ${evs[2]}`;
+  };
+
+  const formatDeclined = (evs: string[]) => {
+    if (evs.length === 1) return `au ${evs[0]}`;
+    if (evs.length === 2) return `au ${evs[0]} ni au ${evs[1]}`;
+    return `au ${evs[0]}, au ${evs[1]} ni au ${evs[2]}`;
+  };
+
+  let presenceHtml = "";
+
+  if (attendingEvents.length > 0) {
+    presenceHtml += `<span style="font-weight: 600; color: #166534;">Sera présent(e)</span> ${formatAttending(attendingEvents)}`;
+  }
+
+  if (declinedEvents.length > 0) {
+    if (presenceHtml !== "") presenceHtml += "<br>";
+    presenceHtml += `<span style="font-weight: 600; color: #991b1b;">Ne sera pas présent(e)</span> ${formatDeclined(declinedEvents)}`;
+  }
+
+  if (presenceHtml === "") {
+    presenceHtml = `<span style="font-weight: 600; color: #166534;">Sera présent(e)</span>`;
+  }
+
+  const dietaryHtml = (m.isAttending && m.dietaryNotes && m.dietaryNotes.trim())
+    ? `<br><span style="font-weight: 600; color: #b45309;">Régime particulier :</span> <span style="color: #b91c1c; font-weight: 500;">${esc(m.dietaryNotes.trim())}</span>`
+    : "";
+
+  return `${presenceHtml}${dietaryHtml}`;
+}
+
+function formatMemberPresenceText(m: any): string {
+  if (!m.isAttending) {
+    return "Ne sera malheureusement pas des nôtres";
+  }
+
+  const attendingEvents: string[] = [];
+  const declinedEvents: string[] = [];
+
+  const invitedVin = m.invitedTo ? m.invitedTo.vinHonneur !== false : true;
+  if (invitedVin) {
+    if (m.events?.vinHonneur) attendingEvents.push("Vin d'Honneur");
+    else declinedEvents.push("Vin d'Honneur");
+  }
+
+  const invitedRepas = m.invitedTo ? Boolean(m.invitedTo.repasNoces) : Boolean(m.events?.repasNoces);
+  if (invitedRepas) {
+    if (m.events?.repasNoces) attendingEvents.push("Repas de Noces");
+    else declinedEvents.push("Repas de Noces");
+  }
+
+  const invitedBrunch = m.invitedTo ? Boolean(m.invitedTo.brunchLendemain) : Boolean(m.events?.brunchLendemain);
+  if (invitedBrunch) {
+    if (m.events?.brunchLendemain) attendingEvents.push("Brunch");
+    else declinedEvents.push("Brunch");
+  }
+
+  const formatAttending = (evs: string[]) => {
+    if (evs.length === 1) return `au ${evs[0]}`;
+    if (evs.length === 2) return `au ${evs[0]} et au ${evs[1]}`;
+    return `au ${evs[0]}, au ${evs[1]} et au ${evs[2]}`;
+  };
+
+  const formatDeclined = (evs: string[]) => {
+    if (evs.length === 1) return `au ${evs[0]}`;
+    if (evs.length === 2) return `au ${evs[0]} ni au ${evs[1]}`;
+    return `au ${evs[0]}, au ${evs[1]} ni au ${evs[2]}`;
+  };
+
+  const parts: string[] = [];
+  if (attendingEvents.length > 0) parts.push(`Sera présent(e) ${formatAttending(attendingEvents)}`);
+  if (declinedEvents.length > 0) parts.push(`Ne sera pas présent(e) ${formatDeclined(declinedEvents)}`);
+  if (m.dietaryNotes && m.dietaryNotes.trim()) parts.push(`Régime particulier : ${m.dietaryNotes.trim()}`);
+
+  return parts.length > 0 ? parts.join(" | ") : "Sera présent(e)";
+}
+
 export interface HostRecapSummary {
   hostId: string;
   hostLabel: string;
@@ -678,20 +784,22 @@ export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCou
     const presentsHtml = presentFamilies.length === 0
       ? `<div style="padding: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 14px; font-style: italic;">Aucune présence confirmée pour le moment.</div>`
       : presentFamilies.map(({ family, members }) => `
-        <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-            <strong style="font-size: 15px; color: #166534;">${esc(family.familyName)}</strong>
+        <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 14px 18px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <strong style="font-size: 15px; color: #166534;">Famille ${esc(family.familyName)}</strong>
             <span style="font-size: 12px; color: #64748b;">${family.email ? esc(family.email) : ''}</span>
           </div>
-          <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; color: #1e293b; line-height: 1.7;">
+          <div style="margin: 0; padding-left: 2px;">
             ${members.map((m: any) => `
-              <li>
-                <strong>${esc(m.firstName)} ${esc(m.lastName)}</strong> ${memberTypeBadge(m)}
-                — <span style="color: #166534; font-weight: 500;">${esc(eventsOf(m))}</span>
-                ${m.dietaryNotes && m.dietaryNotes.trim() ? `<div style="margin-top: 2px; padding: 2px 8px; background-color: #fff1f2; color: #b91c1c; border-radius: 4px; font-size: 12px; font-weight: 500; display: inline-block;">⚠️ Régime / Allergies : ${esc(m.dietaryNotes.trim())}</div>` : ''}
-              </li>
+              <div style="margin-bottom: 12px; font-size: 14px; line-height: 1.6;">
+                <span style="font-weight: 600; color: #1c2833;">${esc(m.firstName)} ${esc(m.lastName)}</span>
+                <span style="margin-left: 6px;">${memberTypeBadge(m)}</span>
+                <div style="margin-top: 3px; font-size: 13px; line-height: 1.5; padding-left: 10px; border-left: 2px solid #bbf7d0; color: #475569;">
+                  ${formatMemberPresenceHtml(m)}
+                </div>
+              </div>
             `).join('')}
-          </ul>
+          </div>
         </div>
       `).join('');
 
@@ -699,19 +807,22 @@ export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCou
     const absentsHtml = absentFamilies.length === 0
       ? `<div style="padding: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 14px; font-style: italic;">Aucun absent déclaré pour le moment.</div>`
       : absentFamilies.map(({ family, members }) => `
-        <div style="background-color: #ffffff; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
-            <strong style="font-size: 15px; color: #991b1b;">${esc(family.familyName)}</strong>
+        <div style="background-color: #ffffff; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 8px; padding: 14px 18px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <strong style="font-size: 15px; color: #991b1b;">Famille ${esc(family.familyName)}</strong>
             <span style="font-size: 12px; color: #64748b;">${family.email ? esc(family.email) : ''}</span>
           </div>
-          <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; color: #475569; line-height: 1.6;">
+          <div style="margin: 0; padding-left: 2px;">
             ${members.map((m: any) => `
-              <li>
-                <span>${esc(m.firstName)} ${esc(m.lastName)}</span> ${memberTypeBadge(m)}
-                <span style="color: #991b1b; font-size: 12px; font-style: italic;">(Ne sera pas présent)</span>
-              </li>
+              <div style="margin-bottom: 10px; font-size: 14px; line-height: 1.6;">
+                <span style="font-weight: 600; color: #1c2833;">${esc(m.firstName)} ${esc(m.lastName)}</span>
+                <span style="margin-left: 6px;">${memberTypeBadge(m)}</span>
+                <div style="margin-top: 3px; font-size: 13px; line-height: 1.5; padding-left: 10px; border-left: 2px solid #fecaca; color: #991b1b;">
+                  <span style="font-weight: 500;">Ne sera malheureusement pas des nôtres</span>
+                </div>
+              </div>
             `).join('')}
-          </ul>
+          </div>
         </div>
       `).join('');
 
@@ -879,14 +990,14 @@ ${f.members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m
 ==================================================
 ${presentFamilies.length === 0 ? 'Aucune présence confirmée pour le moment.' : presentFamilies.map(({ family, members }) => `
 * Famille ${family.familyName} :
-${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : ${eventsOf(m)}${m.dietaryNotes ? ' [Régime: ' + m.dietaryNotes + ']' : ''}`).join('\n')}`).join('\n')}
+${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : ${formatMemberPresenceText(m)}`).join('\n')}`).join('\n')}
 
 ==================================================
 3. SECTION "ABSENTS" (${absentsCount} personnes)
 ==================================================
 ${absentFamilies.length === 0 ? 'Aucun absent déclaré.' : absentFamilies.map(({ family, members }) => `
 * Famille ${family.familyName} :
-${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : Absent(e)`).join('\n')}`).join('\n')}
+${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : Ne sera malheureusement pas des nôtres`).join('\n')}`).join('\n')}
 
 --------------------------------------------------
 Valentine & Jean — 17 Avril 2027
