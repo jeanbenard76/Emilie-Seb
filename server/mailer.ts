@@ -616,7 +616,7 @@ function formatMemberPresenceText(m: any): string {
   return parts.length > 0 ? parts.join(" | ") : "Sera présent(e)";
 }
 
-function getStatusStyle(val: any): { fontColor: string; bgColor: string } | null {
+function getStatusStyle(val: any): { fontColor: string; bgColor: string; borderColor?: string } | null {
   if (!val) return null;
   const norm = String(val).trim().toLowerCase();
 
@@ -628,11 +628,12 @@ function getStatusStyle(val: any): { fontColor: string; bgColor: string } | null
     };
   }
 
-  // 2. Absent / Non présent (Bleu sur fond bleu)
+  // 2. Absent / Non présent (Bleu ciel azur franc + texte bleu nuit foncé + fine bordure bleue)
   if (norm.includes("absent") || norm.includes("non présent")) {
     return {
-      fontColor: "FF1E40AF", // bleu royal / marine soutenu
-      bgColor: "FFDBEAFE",   // bleu clair pastel
+      fontColor: "FF0C4A6E",   // bleu nuit très foncé (#0C4A6E)
+      bgColor: "FF93C5FD",     // bleu azur dense et très visible (#93C5FD)
+      borderColor: "FF60A5FA", // fine bordure bleue (#60A5FA)
     };
   }
 
@@ -888,6 +889,14 @@ export async function generateHostRecapExcel(hostLabel: string, families: any[],
               bold: false, // Rien de gras
               color: { argb: style.fontColor },
             };
+            if (style.borderColor) {
+              cell.border = {
+                top: { style: "thin", color: { argb: style.borderColor } },
+                bottom: { style: isLastMember ? "medium" : "thin", color: { argb: isLastMember ? "FF64748B" : style.borderColor } },
+                left: { style: "thin", color: { argb: style.borderColor } },
+                right: { style: "thin", color: { argb: style.borderColor } },
+              };
+            }
           }
         } else if (colNumber === 9) {
           // Régime / Allergies
@@ -978,8 +987,8 @@ export async function generateHostRecapExcel(hostLabel: string, families: any[],
         c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFBEB" } };
         if (colIdx === 1) c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF92400E" } };
       } else if (type === "absent") {
-        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFF6FF" } };
-        if (colIdx === 1) c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF1E40AF" } };
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFBAE6FD" } };
+        if (colIdx === 1) c.font = { name: "Calibri", size: 10.5, bold: false, color: { argb: "FF0C4A6E" } };
       }
     });
   });
