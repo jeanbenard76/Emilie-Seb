@@ -44,6 +44,7 @@ export async function initDatabase(): Promise<Database> {
       family_name TEXT NOT NULL,
       email TEXT,
       notes TEXT,
+      invited_by TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -87,6 +88,7 @@ export async function initDatabase(): Promise<Database> {
   `);
 
   // Migrations for existing databases
+  try { db.run('ALTER TABLE families ADD COLUMN invited_by TEXT'); } catch (e) {}
   try { db.run('ALTER TABLE members ADD COLUMN invited_vin INTEGER DEFAULT 1'); } catch (e) {}
   try { db.run('ALTER TABLE members ADD COLUMN invited_repas INTEGER DEFAULT 1'); } catch (e) {}
   try { db.run('ALTER TABLE members ADD COLUMN invited_brunch INTEGER DEFAULT 1'); } catch (e) {}
@@ -215,6 +217,7 @@ export function getAllFamiliesWithMembers() {
       id: fam.id,
       familyName: fam.family_name,
       email: fam.email,
+      invitedBy: fam.invited_by || null,
       notes: fam.notes,
       hasResponded,
       respondedAt,
@@ -487,9 +490,9 @@ export function addFamilies(families: any[]) {
     
     // Insert or Update family
     db.run(
-      `INSERT INTO families (id, family_name, email, notes) VALUES (?, ?, ?, 'manual_addition')
-       ON CONFLICT(id) DO UPDATE SET family_name=excluded.family_name, email=excluded.email`,
-      [famId, fam.familyName, fam.email || '']
+      `INSERT INTO families (id, family_name, email, notes, invited_by) VALUES (?, ?, ?, 'manual_addition', ?)
+       ON CONFLICT(id) DO UPDATE SET family_name=excluded.family_name, email=excluded.email, invited_by=excluded.invited_by`,
+      [famId, fam.familyName, fam.email || '', fam.invitedBy || null]
     );
 
     // Delete existing members so we don't create duplicates on re-import
@@ -541,7 +544,12 @@ export function deleteFamily(familyId: string) {
  */
 export function updateFamily(familyId: string, familyData: any) {
   if (!db) throw new Error('Database not initialized');
-  db.run("UPDATE families SET family_name = ?, email = ? WHERE id = ?", [familyData.familyName, familyData.email || '', familyId]);
+  db.run("UPDATE families SET family_name = ?, email = ?, invited_by = ? WHERE id = ?", [
+    familyData.familyName,
+    familyData.email || '',
+    familyData.invitedBy || null,
+    familyId
+  ]);
   db.run("DELETE FROM members WHERE family_id = ?", [familyId]);
   for (const m of familyData.members) {
       const memId = m.id || `m-custom-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -558,6 +566,16 @@ export function updateFamily(familyId: string, familyData: any) {
         [memId, familyId, m.firstName, m.lastName, m.isChild ? 1 : 0, m.isBaby ? 1 : 0, m.age || null, isAttending, invVin, invRepas, invBrunch, vin, repas, brunch, m.dietaryNotes || '']
       );
   }
+  saveDatabaseToDisk();
+  return { success: true };
+}
+
+/**
+ * Update the host (who invited) for a given family.
+ */
+export function updateFamilyHost(familyId: string, invitedBy: string | null) {
+  if (!db) throw new Error('Database not initialized');
+  db.run("UPDATE families SET invited_by = ? WHERE id = ?", [invitedBy || null, familyId]);
   saveDatabaseToDisk();
   return { success: true };
 }

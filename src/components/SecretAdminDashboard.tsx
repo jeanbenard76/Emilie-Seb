@@ -71,6 +71,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'attending' | 'absent' | 'dietary'>('all');
   const [filterEvent, setFilterEvent] = useState<'all' | 'vin' | 'repas' | 'brunch'>('all');
+  const [filterHost, setFilterHost] = useState<'all' | 'unassigned' | 'Valentine&Jean' | 'Anny&Marc' | 'Anne&Visith'>('all');
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [editingFamily, setEditingFamily] = useState<GuestFamily | null>(null);
 
@@ -212,6 +213,26 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     }
   };
 
+  const handleUpdateFamilyHost = async (familyId: string, host: string) => {
+    const newHost = host || null;
+    setFamilies((prev) =>
+      prev.map((f) => (f.id === familyId ? { ...f, invitedBy: newHost } : f))
+    );
+    try {
+      const res = await fetch('/api/admin/update-family-host', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+        body: JSON.stringify({ familyId, invitedBy: newHost }),
+      });
+      if (!res.ok) {
+        fetchFamilies();
+      }
+    } catch (e) {
+      console.error('Erreur mise à jour hôte famille:', e);
+      fetchFamilies();
+    }
+  };
+
   // Compute breakdown of Adults & Children per Event
   const eventBreakdown = useMemo(() => {
     let vinAdults = 0, vinChildren = 0, vinBabies = 0;
@@ -336,6 +357,43 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
   }, [families]);
 
 
+  // Compute breakdown by host (Invité par)
+  const hostStats = useMemo(() => {
+    let vjFamilies = 0, vjGuests = 0, vjAttending = 0;
+    let amFamilies = 0, amGuests = 0, amAttending = 0;
+    let avFamilies = 0, avGuests = 0, avAttending = 0;
+    let unassignedFamilies = 0, unassignedGuests = 0;
+
+    families.forEach((fam) => {
+      const gCount = fam.members.length;
+      const aCount = fam.members.filter((m) => m.isAttending).length;
+
+      if (fam.invitedBy === 'Valentine&Jean') {
+        vjFamilies++;
+        vjGuests += gCount;
+        vjAttending += aCount;
+      } else if (fam.invitedBy === 'Anny&Marc') {
+        amFamilies++;
+        amGuests += gCount;
+        amAttending += aCount;
+      } else if (fam.invitedBy === 'Anne&Visith') {
+        avFamilies++;
+        avGuests += gCount;
+        avAttending += aCount;
+      } else {
+        unassignedFamilies++;
+        unassignedGuests += gCount;
+      }
+    });
+
+    return {
+      vj: { families: vjFamilies, guests: vjGuests, attending: vjAttending },
+      am: { families: amFamilies, guests: amGuests, attending: amAttending },
+      av: { families: avFamilies, guests: avGuests, attending: avAttending },
+      unassigned: { families: unassignedFamilies, guests: unassignedGuests },
+    };
+  }, [families]);
+
   // Filtered families list
   const filteredFamilies = useMemo(() => {
     return families.filter((fam) => {
@@ -354,9 +412,13 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       if (filterEvent === 'repas' && !fam.members.some((m) => m.isAttending && m.events?.repasNoces)) return false;
       if (filterEvent === 'brunch' && !fam.members.some((m) => m.isAttending && m.events?.brunchLendemain)) return false;
 
+      // 4. Filter Host
+      if (filterHost === 'unassigned' && fam.invitedBy) return false;
+      if (filterHost !== 'all' && filterHost !== 'unassigned' && fam.invitedBy !== filterHost) return false;
+
       return true;
     });
-  }, [families, search, filterStatus, filterEvent]);
+  }, [families, search, filterStatus, filterEvent, filterHost]);
 
   // Waiting for authentication (native browser prompt)
   if (!authed) {
@@ -617,7 +679,83 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
               <option value="repas">Présents au Repas</option>
               <option value="brunch">Présents au Brunch</option>
             </select>
+
+            {/* Host Filter */}
+            <select
+              value={filterHost}
+              onChange={(e: any) => setFilterHost(e.target.value)}
+              className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto font-medium"
+            >
+              <option value="all">Tous les hôtes</option>
+              <option value="Valentine&Jean">Valentine &amp; Jean</option>
+              <option value="Anny&Marc">Anny &amp; Marc</option>
+              <option value="Anne&Visith">Anne &amp; Visith</option>
+              <option value="unassigned">⚠️ À catégoriser</option>
+            </select>
           </div>
+        </div>
+
+        {/* Host Quick Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-100 pb-3">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">
+            Par hôte :
+          </span>
+          <button
+            onClick={() => setFilterHost('all')}
+            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              filterHost === 'all'
+                ? 'bg-[#13263B] text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Tous ({families.length})
+          </button>
+          <button
+            onClick={() => setFilterHost(filterHost === 'Valentine&Jean' ? 'all' : 'Valentine&Jean')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterHost === 'Valentine&Jean'
+                ? 'bg-[#13263B] text-white shadow-xs'
+                : 'bg-blue-50 text-[#13263B] border border-blue-200 hover:bg-blue-100'
+            }`}
+          >
+            <span>💌 Valentine &amp; Jean</span>
+            <span className="text-[10px] opacity-80 font-mono">({hostStats.vj.families} fam. / {hostStats.vj.guests} pers.)</span>
+          </button>
+          <button
+            onClick={() => setFilterHost(filterHost === 'Anny&Marc' ? 'all' : 'Anny&Marc')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterHost === 'Anny&Marc'
+                ? 'bg-rose-700 text-white shadow-xs'
+                : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
+            }`}
+          >
+            <span>🌸 Anny &amp; Marc</span>
+            <span className="text-[10px] opacity-80 font-mono">({hostStats.am.families} fam. / {hostStats.am.guests} pers.)</span>
+          </button>
+          <button
+            onClick={() => setFilterHost(filterHost === 'Anne&Visith' ? 'all' : 'Anne&Visith')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterHost === 'Anne&Visith'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100'
+            }`}
+          >
+            <span>🌿 Anne &amp; Visith</span>
+            <span className="text-[10px] opacity-80 font-mono">({hostStats.av.families} fam. / {hostStats.av.guests} pers.)</span>
+          </button>
+          {hostStats.unassigned.families > 0 && (
+            <button
+              onClick={() => setFilterHost(filterHost === 'unassigned' ? 'all' : 'unassigned')}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                filterHost === 'unassigned'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
+              }`}
+            >
+              <span>⚠️ À catégoriser</span>
+              <span className="text-[10px] font-mono">({hostStats.unassigned.families} fam.)</span>
+            </button>
+          )}
         </div>
 
         {/* Query Results Cards List */}
@@ -649,6 +787,27 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                      {/* Quick Host Selector */}
+                      <select
+                        value={fam.invitedBy || ''}
+                        onChange={(e) => handleUpdateFamilyHost(fam.id, e.target.value)}
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                          fam.invitedBy === 'Valentine&Jean'
+                            ? 'bg-blue-50 text-[#13263B] border-blue-200 hover:border-blue-400'
+                            : fam.invitedBy === 'Anny&Marc'
+                            ? 'bg-rose-50 text-rose-800 border-rose-200 hover:border-rose-400'
+                            : fam.invitedBy === 'Anne&Visith'
+                            ? 'bg-teal-50 text-teal-800 border-teal-200 hover:border-teal-400'
+                            : 'bg-amber-100 text-amber-900 border-amber-300 hover:border-amber-500 font-bold'
+                        }`}
+                        title="Qui a invité cette famille ? Cliquez pour changer rapidement"
+                      >
+                        <option value="">⚠️ Hôte : à définir</option>
+                        <option value="Valentine&Jean">💌 Valentine &amp; Jean</option>
+                        <option value="Anny&Marc">🌸 Anny &amp; Marc</option>
+                        <option value="Anne&Visith">🌿 Anne &amp; Visith</option>
+                      </select>
+
                       {isResponded ? (
                         <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full font-sans">
                           ✓ Répondu {fam.respondedAt ? `le ${formatDate(fam.respondedAt)}` : ''} ({attendingMembers.length} présent(s) / {absentMembers.length} absent(s))
@@ -815,10 +974,11 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
           onClick={() => {
-            let csv = "ID Famille,Famille,Prénom,Nom,Statut,Âge,Présent,Vin d'Honneur,Repas de Noces,Brunch,Régime/Allergies,Email\n";
+            let csv = "ID Famille,Famille,Invité par,Prénom,Nom,Statut,Âge,Présent,Vin d'Honneur,Repas de Noces,Brunch,Régime/Allergies,Email\n";
             families.forEach((fam) => {
+              const hostLabel = fam.invitedBy === 'Valentine&Jean' ? 'Valentine & Jean' : fam.invitedBy === 'Anny&Marc' ? 'Anny & Marc' : fam.invitedBy === 'Anne&Visith' ? 'Anne & Visith' : (fam.invitedBy || 'Non défini');
               fam.members.forEach((m: any) => {
-                csv += `"${fam.id}","${fam.familyName}","${m.firstName}","${m.lastName}","${
+                csv += `"${fam.id}","${fam.familyName}","${hostLabel}","${m.firstName}","${m.lastName}","${
                   m.isBaby ? "Bébé" : (m.isChild ? "Enfant" : "Adulte")
                 }","${m.age || ""}","${m.isAttending ? "Oui" : "Non"}","${
                   m.events?.vinHonneur ? "Oui" : "Non"

@@ -12,6 +12,7 @@ interface AdminEditFamilyModalProps {
 export default function AdminEditFamilyModal({ family, onClose, onSuccess, adminHeaders }: AdminEditFamilyModalProps) {
   const [familyName, setFamilyName] = useState(family.familyName);
   const [email, setEmail] = useState(family.email || '');
+  const [invitedBy, setInvitedBy] = useState(family.invitedBy || '');
   const [members, setMembers] = useState(
     family.members.map(m => ({
       id: m.id,
@@ -64,6 +65,7 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
     const payload = {
       familyName: familyName.trim(),
       email: email.trim(),
+      invitedBy: invitedBy || null,
       members: members.map(m => ({
         id: m.id.startsWith('new-') ? null : m.id,
         firstName: m.firstName.trim(),
@@ -107,7 +109,7 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
 
         {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-xl">{error}</div>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nom de la famille</label>
             <input type="text" value={familyName} onChange={e => setFamilyName(e.target.value)} className="w-full px-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-sm" />
@@ -115,6 +117,19 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
           <div>
             <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Invité par</label>
+            <select
+              value={invitedBy}
+              onChange={e => setInvitedBy(e.target.value)}
+              className="w-full px-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-sm font-medium cursor-pointer"
+            >
+              <option value="">À définir (non assigné)</option>
+              <option value="Valentine&Jean">Valentine &amp; Jean</option>
+              <option value="Anny&Marc">Anny &amp; Marc</option>
+              <option value="Anne&Visith">Anne &amp; Visith</option>
+            </select>
           </div>
         </div>
 

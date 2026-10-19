@@ -21,6 +21,7 @@ import {
   addFamilies,
   deleteFamily,
   updateFamily,
+  updateFamilyHost,
   addContactMessage,
   getAllContactMessages,
   clearAllContactMessages,
@@ -217,6 +218,18 @@ async function startServer() {
       const familyId = req.params.id;
       if (!familyId) return res.status(400).json({ error: "L'ID de la famille est requis" });
       const result = deleteFamily(familyId);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Update host (who invited) for a family
+  app.post("/api/admin/update-family-host", requireAdmin, (req, res) => {
+    try {
+      const { familyId, invitedBy } = req.body;
+      if (!familyId) return res.status(400).json({ error: "familyId requis" });
+      const result = updateFamilyHost(familyId, invitedBy);
       res.json(result);
     } catch (err: any) {
       res.status(500).json({ error: err.message });

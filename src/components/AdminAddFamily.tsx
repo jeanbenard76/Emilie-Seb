@@ -18,6 +18,7 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
   // Manual form state
   const [familyName, setFamilyName] = useState('');
   const [email, setEmail] = useState('');
+  const [invitedBy, setInvitedBy] = useState<string>('Valentine&Jean');
   const [members, setMembers] = useState<{ id: number, firstName: string, lastName: string, isChild: boolean, isBaby: boolean, invitedVin: boolean, invitedRepas: boolean, invitedBrunch: boolean }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +52,7 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
     const payload = [{
       familyName: familyName.trim(),
       email: email.trim(),
+      invitedBy: invitedBy || null,
       members: members.map(m => ({
         firstName: m.firstName.trim(),
         lastName: m.lastName.trim(),
@@ -74,6 +76,7 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
       
       setFamilyName('');
       setEmail('');
+      setInvitedBy('Valentine&Jean');
       setMembers([]);
       setMode('none');
       onSuccess();
@@ -118,16 +121,30 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
         const brunch = row["Brunch"]?.toString().toLowerCase() !== 'non';
         const age = parseInt(row["Âge"]?.toString() || '0') || null;
 
+        const hostRaw = (row['Invité par'] || row['Invités par'] || row['Invité Par'] || row['Hôte'] || row['Hote'] || '').toString().trim();
+        let rowHost: string | null = null;
+        if (hostRaw) {
+          const hl = hostRaw.toLowerCase();
+          if (hl.includes('anny') || hl.includes('marc')) rowHost = 'Anny&Marc';
+          else if (hl.includes('visith') || hl.includes('anne')) rowHost = 'Anne&Visith';
+          else if (hl.includes('valentin') || hl.includes('jean')) rowHost = 'Valentine&Jean';
+          else rowHost = hostRaw;
+        }
+
         if (!familiesMap.has(groupKey)) {
           familiesMap.set(groupKey, {
             id: famIdStr || undefined,
             familyName: famName,
             email: email,
+            invitedBy: rowHost,
             members: []
           });
         }
         
-        // Only update email if it was empty and we found one
+        // Update host or email if found on subsequent member row
+        if (!familiesMap.get(groupKey).invitedBy && rowHost) {
+          familiesMap.get(groupKey).invitedBy = rowHost;
+        }
         if (!familiesMap.get(groupKey).email && email) {
           familiesMap.get(groupKey).email = email;
         }
@@ -226,7 +243,7 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
       {/* MANUAL MODE */}
       {mode === 'manual' && (
         <div className="mt-6 space-y-4 animate-fade-in">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Nom de la famille *</label>
               <input type="text" value={familyName} onChange={e => {
@@ -238,6 +255,19 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
             <div>
               <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Email de contact (optionnel)</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="famille@email.com" className="w-full px-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Invité par</label>
+              <select
+                value={invitedBy}
+                onChange={e => setInvitedBy(e.target.value)}
+                className="w-full px-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-sm font-medium cursor-pointer"
+              >
+                <option value="Valentine&Jean">Valentine &amp; Jean</option>
+                <option value="Anny&Marc">Anny &amp; Marc</option>
+                <option value="Anne&Visith">Anne &amp; Visith</option>
+                <option value="">À définir (non assigné)</option>
+              </select>
             </div>
           </div>
 
@@ -325,7 +355,18 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
               <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl bg-slate-50 p-3 space-y-2 text-xs">
                 {excelPreview.slice(0, 10).map((f, i) => (
                   <div key={i} className="flex justify-between items-center pb-2 border-b border-slate-200 last:border-0 last:pb-0">
-                    <span className="font-bold text-[#13263B]">{f.familyName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[#13263B]">{f.familyName}</span>
+                      {f.invitedBy ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-50 text-[#13263B]">
+                          {f.invitedBy === 'Valentine&Jean' ? 'Valentine & Jean' : f.invitedBy === 'Anny&Marc' ? 'Anny & Marc' : f.invitedBy === 'Anne&Visith' ? 'Anne & Visith' : f.invitedBy}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-slate-200 text-slate-600">
+                          Non défini
+                        </span>
+                      )}
+                    </div>
                     <span className="text-slate-500">{f.members.length} membre(s)</span>
                   </div>
                 ))}

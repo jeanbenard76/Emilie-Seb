@@ -46,10 +46,19 @@ export interface FamilyMember {
   dietaryNotes?: string;
 }
 
+export type Inviter = 'Valentine&Jean' | 'Anny&Marc' | 'Anne&Visith';
+
+export const INVITERS: { id: Inviter; label: string }[] = [
+  { id: 'Valentine&Jean', label: 'Valentine & Jean' },
+  { id: 'Anny&Marc', label: 'Anny & Marc' },
+  { id: 'Anne&Visith', label: 'Anne & Visith' },
+];
+
 export interface GuestFamily {
   id: string;
   familyName: string;
   email?: string;
+  invitedBy?: Inviter | string | null;
   hasResponded?: boolean;
   respondedAt?: string;
   lastMessage?: string;
