@@ -6,6 +6,7 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import fs from "fs";
 import path from "path";
+import * as XLSX from "xlsx";
 
 export interface RSVPMailPayload {
   familyName: string;
@@ -606,6 +607,112 @@ function formatMemberPresenceText(m: any): string {
   return parts.length > 0 ? parts.join(" | ") : "Sera présent(e)";
 }
 
+function generateHostRecapExcel(hostLabel: string, families: any[], stats: any): Buffer {
+  const wb = XLSX.utils.book_new();
+
+  // Feuille 1 : Liste détaillée des invités
+  const rows: any[] = [];
+  families.forEach((fam) => {
+    const isResponded = Boolean(
+      fam.hasResponded ||
+      fam.respondedAt ||
+      fam.notes === "has_responded" ||
+      (fam.lastMessage && fam.lastMessage.trim().length > 0)
+    );
+
+    fam.members.forEach((m: any) => {
+      const typeStr = m.isBaby ? "Bébé" : (m.isChild ? "Enfant" : "Adulte");
+      let statutReponse = "Non confirmé";
+      let presenceVin = "Non invité";
+      let presenceRepas = "Non invité";
+      let presenceBrunch = "Non invité";
+
+      const invitedVin = m.invitedTo ? m.invitedTo.vinHonneur !== false : true;
+      const invitedRepas = m.invitedTo ? Boolean(m.invitedTo.repasNoces) : Boolean(m.events?.repasNoces);
+      const invitedBrunch = m.invitedTo ? Boolean(m.invitedTo.brunchLendemain) : Boolean(m.events?.brunchLendemain);
+
+      if (isResponded) {
+        if (m.isAttending) {
+          statutReponse = "Présent";
+          if (invitedVin) presenceVin = m.events?.vinHonneur ? "Présent" : "Absent";
+          if (invitedRepas) presenceRepas = m.events?.repasNoces ? "Présent" : "Absent";
+          if (invitedBrunch) presenceBrunch = m.events?.brunchLendemain ? "Présent" : "Absent";
+        } else {
+          statutReponse = "Absent";
+          if (invitedVin) presenceVin = "Absent";
+          if (invitedRepas) presenceRepas = "Absent";
+          if (invitedBrunch) presenceBrunch = "Absent";
+        }
+      } else {
+        statutReponse = "Non confirmé (en attente)";
+        if (invitedVin) presenceVin = "Invité (en attente)";
+        if (invitedRepas) presenceRepas = "Invité (en attente)";
+        if (invitedBrunch) presenceBrunch = "Invité (en attente)";
+      }
+
+      rows.push({
+        "Famille": fam.familyName,
+        "Prénom": m.firstName,
+        "Nom": m.lastName,
+        "Catégorie": typeStr,
+        "Statut Réponse": statutReponse,
+        "Vin d'Honneur": presenceVin,
+        "Repas de Noces": presenceRepas,
+        "Brunch": presenceBrunch,
+        "Régime / Allergies": m.dietaryNotes && m.dietaryNotes.trim() ? m.dietaryNotes.trim() : "-",
+        "Email de contact": fam.email ? fam.email : "-",
+        "Date réponse": fam.respondedAt ? fam.respondedAt : "-",
+      });
+    });
+  });
+
+  const wsInvites = XLSX.utils.json_to_sheet(rows.length > 0 ? rows : [{ "Information": "Aucun invité pour cet hôte." }]);
+  wsInvites["!cols"] = [
+    { wch: 22 }, // Famille
+    { wch: 18 }, // Prénom
+    { wch: 18 }, // Nom
+    { wch: 12 }, // Catégorie
+    { wch: 24 }, // Statut Réponse
+    { wch: 18 }, // Vin d'Honneur
+    { wch: 18 }, // Repas de Noces
+    { wch: 18 }, // Brunch
+    { wch: 26 }, // Régime / Allergies
+    { wch: 28 }, // Email
+    { wch: 20 }, // Date réponse
+  ];
+  XLSX.utils.book_append_sheet(wb, wsInvites, "Liste des Invités");
+
+  // Feuille 2 : Synthèse & Décompte
+  const syntheseData = [
+    ["RÉCAPITULATIF DES INVITÉS — MARIAGE VALENTINE & JEAN 2027"],
+    ["Hôte", hostLabel],
+    ["Date de génération", stats.dateFormatted],
+    [],
+    ["INDICATEUR", "TOTAL", "ADULTES", "ENFANTS", "BÉBÉS"],
+    ["Total Invités", stats.totalInvited, stats.totalAdults, stats.totalChildren, stats.totalBabies],
+    ["Présents", stats.presentsCount, stats.presentAdults, stats.presentChildren, stats.presentBabies],
+    ["Non Confirmés (en attente)", stats.nonConfirmeCount, stats.nonConfirmeAdults, stats.nonConfirmeChildren, stats.nonConfirmeBabies],
+    ["Absents", stats.absentsCount, stats.absentAdults, stats.absentChildren, stats.absentBabies],
+    [],
+    ["DÉCOMPTE PAR REPAS (PRÉSENTS)", "TOTAL", "ADULTES", "ENFANTS", "BÉBÉS"],
+    ["Vin d'Honneur", stats.vinCount, stats.vinAdults, stats.vinChildren, stats.vinBabies],
+    ["Repas de Noces", stats.repasCount, stats.repasAdults, stats.repasChildren, stats.repasBabies],
+    ["Brunch du Lendemain", stats.brunchCount, stats.brunchAdults, stats.brunchChildren, stats.brunchBabies],
+  ];
+
+  const wsSynthese = XLSX.utils.aoa_to_sheet(syntheseData);
+  wsSynthese["!cols"] = [
+    { wch: 32 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+  ];
+  XLSX.utils.book_append_sheet(wb, wsSynthese, "Synthèse & Décompte");
+
+  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+}
+
 export interface HostRecapSummary {
   hostId: string;
   hostLabel: string;
@@ -940,6 +1047,9 @@ export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCou
 
             <!-- PIED DE PAGE & SIGNATURE -->
             <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b; line-height: 1.6;">
+              <div style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; color: #1e293b; font-size: 13px;">
+                📎 <strong>Fichier Excel joint :</strong> Vous trouverez également en pièce jointe de cet email le fichier Excel complet <em>Recapitulatif_Invites_${esc(host.label)}.xlsx</em> avec les onglets <strong>Liste des Invités</strong> et <strong>Synthèse</strong>.
+              </div>
               <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
                 <tr>
                   <td style="vertical-align: middle; padding-right: 14px;">
@@ -1000,8 +1110,39 @@ ${absentFamilies.length === 0 ? 'Aucun absent déclaré.' : absentFamilies.map((
 ${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : Ne sera malheureusement pas des nôtres`).join('\n')}`).join('\n')}
 
 --------------------------------------------------
+📎 Fichier Excel complet joint à ce courriel.
 Valentine & Jean — 17 Avril 2027
 Bot de suivi hebdomadaire du vendredi 20h`;
+
+    const excelBuffer = generateHostRecapExcel(host.label, families, {
+      totalFamilies: families.length,
+      totalInvited,
+      totalAdults,
+      totalChildren,
+      totalBabies,
+      presentsCount,
+      presentAdults,
+      presentChildren,
+      presentBabies,
+      nonConfirmeCount,
+      nonConfirmeAdults,
+      nonConfirmeChildren,
+      nonConfirmeBabies,
+      absentsCount,
+      absentAdults,
+      absentChildren,
+      absentBabies,
+      vinCount, vinAdults, vinChildren, vinBabies,
+      repasCount, repasAdults, repasChildren, repasBabies,
+      brunchCount, brunchAdults, brunchChildren, brunchBabies,
+      dateFormatted,
+    });
+
+    const cleanHostName = host.label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .replace(/_+/g, "_");
 
     mails.push({
       to: recipient,
@@ -1009,7 +1150,14 @@ Bot de suivi hebdomadaire du vendredi 20h`;
       subject: `[Mariage JV2027] Récapitulatif invités ${host.label}`,
       html,
       text,
-      attachments: mailAttachmentsWithLogo,
+      attachments: [
+        ...mailAttachmentsWithLogo,
+        {
+          filename: `Recapitulatif_Invites_${cleanHostName}.xlsx`,
+          content: excelBuffer,
+          contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
+      ],
     });
   }
 
