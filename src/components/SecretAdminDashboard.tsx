@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, Search, Users, Baby, Utensils, MessageSquare, Check, X, ArrowLeft, Trash2, Edit2 } from 'lucide-react';
+import { Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, Search, Users, Baby, Utensils, MessageSquare, Check, X, ArrowLeft, Trash2, Edit2, Mail } from 'lucide-react';
 import ChildIcon from './ChildIcon';
 import { GuestFamily, RSVPStats } from '../types';
 import { getStoredFamilies, clearLocalStorageRSVPs } from '../utils/rsvpStorage';
@@ -74,6 +74,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
   const [filterHost, setFilterHost] = useState<'all' | 'unassigned' | 'Valentine&Jean' | 'Anny&Marc' | 'Anne&Visith'>('all');
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [editingFamily, setEditingFamily] = useState<GuestFamily | null>(null);
+  const [sendingRecap, setSendingRecap] = useState(false);
 
   // Authentication gate: null = checking, true = dashboard (native browser prompt)
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -230,6 +231,32 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     } catch (e) {
       console.error('Erreur mise à jour hôte famille:', e);
       fetchFamilies();
+    }
+  };
+
+  const handleSendRecapEmails = async () => {
+    const confirmed = window.confirm(
+      "Voulez-vous générer et envoyer maintenant les emails récapitulatifs par hôte (Valentine & Jean, Anny & Marc, Anne & Visith) ?"
+    );
+    if (!confirmed) return;
+
+    setSendingRecap(true);
+    try {
+      const res = await fetch('/api/admin/send-recap-emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(`✅ ${data.message || 'Emails récapitulatifs envoyés avec succès !'}`);
+      } else {
+        alert(`❌ Erreur : ${data.error || "Impossible d'envoyer les emails récapitulatifs."}`);
+      }
+    } catch (err: any) {
+      console.error("Erreur envoi récapitulatif:", err);
+      alert("❌ Erreur réseau lors de la génération des emails.");
+    } finally {
+      setSendingRecap(false);
     }
   };
 
@@ -476,15 +503,15 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
         </div>
 
         <div className="flex items-center gap-2">
-          {onBackToHome && (
-            <button
-              onClick={onBackToHome}
-              className="px-4 py-2 bg-[#FAF7F2] hover:bg-slate-200 border border-slate-300 text-[#13263B] text-xs font-semibold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Retour au site</span>
-            </button>
-          )}
+          <button
+            onClick={handleSendRecapEmails}
+            disabled={sendingRecap}
+            className="px-4 py-2 bg-[#C4A475] hover:bg-[#b39263] text-[#13263B] text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+            title="Générer et envoyer les emails récapitulatifs par hôte (tourne aussi automatiquement chaque vendredi à 20h)"
+          >
+            <Mail className={`w-3.5 h-3.5 ${sendingRecap ? 'animate-bounce' : ''}`} />
+            <span>{sendingRecap ? 'Envoi en cours...' : 'Envoyer récapitulatifs hôtes'}</span>
+          </button>
 
           <button
             onClick={() => {

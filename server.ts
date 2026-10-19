@@ -26,7 +26,11 @@ import {
   getAllContactMessages,
   clearAllContactMessages,
 } from "./server/db";
-import { sendRSVPNotificationEmail, sendContactNotificationEmail } from "./server/mailer";
+import {
+  sendRSVPNotificationEmail,
+  sendContactNotificationEmail,
+  sendHostRecapEmails,
+} from "./server/mailer";
 
 async function startServer() {
   const app = express();
@@ -345,6 +349,22 @@ async function startServer() {
     }
   });
 
+  // Trigger weekly recap emails by host (manual trigger from admin dashboard)
+  app.post("/api/admin/send-recap-emails", requireAdmin, async (req, res) => {
+    try {
+      const allFamilies = getAllFamiliesWithMembers();
+      const result = await sendHostRecapEmails(allFamilies);
+      res.json({
+        success: true,
+        message: `${result.sentCount} email(s) récapitulatif(s) envoyé(s) avec succès.`,
+        details: result.details,
+      });
+    } catch (err: any) {
+      console.error("Erreur génération emails récapitulatifs par hôte:", err);
+      res.status(500).json({ error: err.message || "Erreur serveur lors de l'envoi des emails." });
+    }
+  });
+
   // Vite middleware for development only (dynamic import: Vite must never load in production)
   if (!IS_PROD) {
     const { createServer: createViteServer } = await import("vite");
@@ -410,6 +430,40 @@ async function startServer() {
   // Lancement initial de la synchro puis toutes les 15 minutes
   syncMillemercis();
   setInterval(syncMillemercis, 15 * 60 * 1000);
+
+  // --- Bot Récapitulatif Hebdomadaire (Vendredi à 20h00, heure de Paris) ---
+  let lastRecapExecutionDate = "";
+  const checkWeeklyRecapSchedule = () => {
+    try {
+      const now = new Date();
+      const parisDay = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", weekday: "short" }).format(now);
+      const parisHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", hour: "numeric", hour12: false }).format(now), 10);
+      const parisMinute = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", minute: "numeric", hour12: false }).format(now), 10);
+      const parisDate = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(now);
+
+      // Exécution le vendredi à 20h00 (fenêtre de 20h00 à 20h05 en cas de reboot)
+      if (parisDay === "Fri" && parisHour === 20 && parisMinute >= 0 && parisMinute <= 5) {
+        if (lastRecapExecutionDate !== parisDate) {
+          lastRecapExecutionDate = parisDate;
+          console.log(`[Recap Bot] ⏰ Déclenchement automatique du récapitulatif du vendredi 20h (${parisDate})`);
+          const allFamilies = getAllFamiliesWithMembers();
+          sendHostRecapEmails(allFamilies)
+            .then((r) => {
+              console.log(`[Recap Bot] ✅ ${r.sentCount} emails récapitulatifs envoyés avec succès.`);
+            })
+            .catch((err) => {
+              console.error("[Recap Bot] ❌ Erreur lors de l'envoi auto des récapitulatifs:", err);
+            });
+        }
+      }
+    } catch (err) {
+      console.error("[Recap Bot] Erreur calendrier récapitulatif:", err);
+    }
+  };
+
+  // Vérification toutes les 30 secondes
+  checkWeeklyRecapSchedule();
+  setInterval(checkWeeklyRecapSchedule, 30 * 1000);
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(

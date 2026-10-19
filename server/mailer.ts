@@ -479,3 +479,444 @@ Valentine & Jean — 17 Avril 2027`;
     },
   ]);
 }
+
+function invitedEventsOf(m: any): string {
+  const events: string[] = [];
+  if (m.invitedTo?.vinHonneur !== false) events.push("Vin d'Honneur");
+  if (m.invitedTo?.repasNoces) events.push("Repas de Noces");
+  if (m.invitedTo?.brunchLendemain) events.push("Brunch");
+  return events.length > 0 ? events.join(", ") : "Non spécifié";
+}
+
+function memberTypeBadge(m: any): string {
+  if (m.isBaby) return `<span style="display: inline-block; padding: 2px 6px; background-color: #f1f5f9; color: #475569; border-radius: 4px; font-size: 11px; font-weight: 600;">Bébé</span>`;
+  if (m.isChild) return `<span style="display: inline-block; padding: 2px 6px; background-color: #f1f5f9; color: #475569; border-radius: 4px; font-size: 11px; font-weight: 600;">Enfant</span>`;
+  return `<span style="display: inline-block; padding: 2px 6px; background-color: #f1f5f9; color: #475569; border-radius: 4px; font-size: 11px; font-weight: 600;">Adulte</span>`;
+}
+
+function memberTypeText(m: any): string {
+  if (m.isBaby) return "(Bébé)";
+  if (m.isChild) return "(Enfant)";
+  return "(Adulte)";
+}
+
+export interface HostRecapSummary {
+  hostId: string;
+  hostLabel: string;
+  totalFamilies: number;
+  totalInvited: number;
+  presentsCount: number;
+  absentsCount: number;
+  nonConfirmeCount: number;
+  recipient: string;
+}
+
+export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCount: number; details: HostRecapSummary[] }> {
+  const OFFICIAL_HOSTS = [
+    { id: "Valentine&Jean", label: "Valentine & Jean" },
+    { id: "Anny&Marc", label: "Anny & Marc" },
+    { id: "Anne&Visith", label: "Anne & Visith" },
+  ];
+
+  const hostMap = new Map<string, string>();
+  OFFICIAL_HOSTS.forEach((h) => hostMap.set(h.id, h.label));
+
+  allFamilies.forEach((f) => {
+    if (f.invitedBy && !hostMap.has(f.invitedBy)) {
+      hostMap.set(f.invitedBy, f.invitedBy);
+    }
+  });
+
+  const hostsToProcess = Array.from(hostMap.entries()).map(([id, label]) => ({ id, label }));
+
+  const hasUnassigned = allFamilies.some((f) => !f.invitedBy);
+  if (hasUnassigned) {
+    hostsToProcess.push({ id: "unassigned", label: "Sans hôte assigné" });
+  }
+
+  const recipient = process.env.RECAP_EMAIL_TO || process.env.EMAIL_ADDRESS || COUPLE_RSVP_ADDRESS;
+  const now = new Date();
+  const dateFormatted = new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Paris",
+  }).format(now).replace(":", "h");
+
+  const mails: Parameters<typeof sendMail>[0][] = [];
+  const details: HostRecapSummary[] = [];
+
+  for (const host of hostsToProcess) {
+    const families = allFamilies.filter((f) => {
+      if (host.id === "unassigned") return !f.invitedBy;
+      return f.invitedBy === host.id;
+    });
+
+    let totalInvited = 0;
+    let totalAdults = 0;
+    let totalChildren = 0;
+    let totalBabies = 0;
+
+    const nonConfirmeFamilies: any[] = [];
+    let nonConfirmeCount = 0;
+    let nonConfirmeAdults = 0;
+    let nonConfirmeChildren = 0;
+    let nonConfirmeBabies = 0;
+
+    const presentFamilies: Array<{ family: any; members: any[] }> = [];
+    let presentsCount = 0;
+    let presentAdults = 0;
+    let presentChildren = 0;
+    let presentBabies = 0;
+    let vinCount = 0, vinAdults = 0, vinChildren = 0, vinBabies = 0;
+    let repasCount = 0, repasAdults = 0, repasChildren = 0, repasBabies = 0;
+    let brunchCount = 0, brunchAdults = 0, brunchChildren = 0, brunchBabies = 0;
+
+    const absentFamilies: Array<{ family: any; members: any[] }> = [];
+    let absentsCount = 0;
+    let absentAdults = 0;
+    let absentChildren = 0;
+    let absentBabies = 0;
+
+    families.forEach((fam) => {
+      const isResponded = Boolean(
+        fam.hasResponded ||
+        fam.respondedAt ||
+        fam.notes === "has_responded" ||
+        (fam.lastMessage && fam.lastMessage.trim().length > 0)
+      );
+
+      fam.members.forEach((m: any) => {
+        totalInvited++;
+        if (m.isBaby) totalBabies++;
+        else if (m.isChild) totalChildren++;
+        else totalAdults++;
+      });
+
+      if (!isResponded) {
+        nonConfirmeFamilies.push(fam);
+        fam.members.forEach((m: any) => {
+          nonConfirmeCount++;
+          if (m.isBaby) nonConfirmeBabies++;
+          else if (m.isChild) nonConfirmeChildren++;
+          else nonConfirmeAdults++;
+        });
+      } else {
+        const attendingInFam = fam.members.filter((m: any) => m.isAttending);
+        const absentInFam = fam.members.filter((m: any) => !m.isAttending);
+
+        if (attendingInFam.length > 0) {
+          presentFamilies.push({ family: fam, members: attendingInFam });
+          attendingInFam.forEach((m: any) => {
+            presentsCount++;
+            if (m.isBaby) {
+              presentBabies++;
+              if (m.events?.vinHonneur) { vinCount++; vinBabies++; }
+              if (m.events?.repasNoces) { repasCount++; repasBabies++; }
+              if (m.events?.brunchLendemain) { brunchCount++; brunchBabies++; }
+            } else if (m.isChild) {
+              presentChildren++;
+              if (m.events?.vinHonneur) { vinCount++; vinChildren++; }
+              if (m.events?.repasNoces) { repasCount++; repasChildren++; }
+              if (m.events?.brunchLendemain) { brunchCount++; brunchChildren++; }
+            } else {
+              presentAdults++;
+              if (m.events?.vinHonneur) { vinCount++; vinAdults++; }
+              if (m.events?.repasNoces) { repasCount++; repasAdults++; }
+              if (m.events?.brunchLendemain) { brunchCount++; brunchAdults++; }
+            }
+          });
+        }
+
+        if (absentInFam.length > 0) {
+          absentFamilies.push({ family: fam, members: absentInFam });
+          absentInFam.forEach((m: any) => {
+            absentsCount++;
+            if (m.isBaby) absentBabies++;
+            else if (m.isChild) absentChildren++;
+            else absentAdults++;
+          });
+        }
+      }
+    });
+
+    details.push({
+      hostId: host.id,
+      hostLabel: host.label,
+      totalFamilies: families.length,
+      totalInvited,
+      presentsCount,
+      absentsCount,
+      nonConfirmeCount,
+      recipient,
+    });
+
+    // 1. HTML NON CONFIRMÉS
+    const nonConfirmeHtml = nonConfirmeFamilies.length === 0
+      ? `<div style="padding: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 14px; font-style: italic;">✨ Toutes les familles de cet hôte ont déjà répondu !</div>`
+      : nonConfirmeFamilies.map((fam) => `
+        <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+            <strong style="font-size: 15px; color: #0f172a;">${esc(fam.familyName)}</strong>
+            <span style="font-size: 12px; color: #64748b;">${fam.email ? esc(fam.email) : 'Email non renseigné'}</span>
+          </div>
+          <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; color: #334155; line-height: 1.6;">
+            ${fam.members.map((m: any) => `
+              <li>
+                <strong>${esc(m.firstName)} ${esc(m.lastName)}</strong> ${memberTypeBadge(m)}
+                <span style="color: #64748b; font-size: 12px; margin-left: 6px;">(Invité(e) : ${esc(invitedEventsOf(m))})</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('');
+
+    // 2. HTML PRÉSENTS
+    const presentsHtml = presentFamilies.length === 0
+      ? `<div style="padding: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 14px; font-style: italic;">Aucune présence confirmée pour le moment.</div>`
+      : presentFamilies.map(({ family, members }) => `
+        <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+            <strong style="font-size: 15px; color: #166534;">${esc(family.familyName)}</strong>
+            <span style="font-size: 12px; color: #64748b;">${family.email ? esc(family.email) : ''}</span>
+          </div>
+          <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; color: #1e293b; line-height: 1.7;">
+            ${members.map((m: any) => `
+              <li>
+                <strong>${esc(m.firstName)} ${esc(m.lastName)}</strong> ${memberTypeBadge(m)}
+                — <span style="color: #166534; font-weight: 500;">${esc(eventsOf(m))}</span>
+                ${m.dietaryNotes && m.dietaryNotes.trim() ? `<div style="margin-top: 2px; padding: 2px 8px; background-color: #fff1f2; color: #b91c1c; border-radius: 4px; font-size: 12px; font-weight: 500; display: inline-block;">⚠️ Régime / Allergies : ${esc(m.dietaryNotes.trim())}</div>` : ''}
+              </li>
+            `).join('')}
+          </ul>
+          ${family.lastMessage && family.lastMessage.trim() ? `
+            <div style="margin-top: 10px; padding: 8px 12px; background-color: #f0fdf4; border-radius: 6px; font-size: 13px; color: #166534; font-style: italic;">
+              💬 « ${esc(family.lastMessage.trim())} »
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+    // 3. HTML ABSENTS
+    const absentsHtml = absentFamilies.length === 0
+      ? `<div style="padding: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 14px; font-style: italic;">Aucun absent déclaré pour le moment.</div>`
+      : absentFamilies.map(({ family, members }) => `
+        <div style="background-color: #ffffff; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 8px; padding: 14px 18px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+            <strong style="font-size: 15px; color: #991b1b;">${esc(family.familyName)}</strong>
+            <span style="font-size: 12px; color: #64748b;">${family.email ? esc(family.email) : ''}</span>
+          </div>
+          <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px; color: #475569; line-height: 1.6;">
+            ${members.map((m: any) => `
+              <li>
+                <span>${esc(m.firstName)} ${esc(m.lastName)}</span> ${memberTypeBadge(m)}
+                <span style="color: #991b1b; font-size: 12px; font-style: italic;">(Ne sera pas présent)</span>
+              </li>
+            `).join('')}
+          </ul>
+          ${family.lastMessage && family.lastMessage.trim() ? `
+            <div style="margin-top: 10px; padding: 8px 12px; background-color: #fef2f2; border-radius: 6px; font-size: 13px; color: #991b1b; font-style: italic;">
+              💬 « ${esc(family.lastMessage.trim())} »
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; padding: 16px; background-color: #f8fafc;">
+        <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);">
+          
+          <!-- BANNIÈRE EN-TÊTE -->
+          <div style="background: linear-gradient(135deg, #13263B 0%, #1e3a5f 100%); padding: 28px 24px; text-align: center; border-bottom: 3px solid #C4A475;">
+            <div style="background: rgba(196, 164, 117, 0.2); color: #E8D3B1; border: 1px solid rgba(196, 164, 117, 0.4); border-radius: 9999px; padding: 4px 14px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; display: inline-block; margin-bottom: 10px;">
+              MARIAGE VALENTINE &amp; JEAN • 17 AVRIL 2027
+            </div>
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">
+              Récapitulatif Invités • ${esc(host.label)}
+            </h1>
+            <p style="color: #cbd5e1; margin: 6px 0 0 0; font-size: 13px;">
+              Point arrêté au ${esc(dateFormatted)}
+            </p>
+          </div>
+
+          <!-- CONTENU PRINCIPAL -->
+          <div style="padding: 24px;">
+            
+            <!-- 1. LE DÉCOMPTE (KPIs) -->
+            <div style="margin-bottom: 24px;">
+              <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;">
+                📊 DÉCOMPTE GLOBAL
+              </div>
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="table-layout: fixed;">
+                <tr>
+                  <td style="padding: 4px;">
+                    <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; text-align: center;">
+                      <span style="display: block; font-size: 26px; font-weight: 800; color: #13263B; line-height: 1.1;">${totalInvited}</span>
+                      <span style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-top: 4px;">Total Invités</span>
+                      <span style="display: block; font-size: 10px; color: #64748b; margin-top: 2px;">${totalAdults} ad • ${totalChildren} enf • ${totalBabies} bb</span>
+                    </div>
+                  </td>
+                  <td style="padding: 4px;">
+                    <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px; text-align: center;">
+                      <span style="display: block; font-size: 26px; font-weight: 800; color: #166534; line-height: 1.1;">${presentsCount}</span>
+                      <span style="display: block; font-size: 12px; font-weight: 700; color: #166534; margin-top: 4px;">Présents</span>
+                      <span style="display: block; font-size: 10px; color: #15803d; margin-top: 2px;">${presentAdults} ad • ${presentChildren} enf • ${presentBabies} bb</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px;">
+                    <div style="background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 12px; text-align: center;">
+                      <span style="display: block; font-size: 26px; font-weight: 800; color: #b45309; line-height: 1.1;">${nonConfirmeCount}</span>
+                      <span style="display: block; font-size: 12px; font-weight: 700; color: #b45309; margin-top: 4px;">Non Confirmés</span>
+                      <span style="display: block; font-size: 10px; color: #92400e; margin-top: 2px;">${nonConfirmeFamilies.length} famille(s)</span>
+                    </div>
+                  </td>
+                  <td style="padding: 4px;">
+                    <div style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px; text-align: center;">
+                      <span style="display: block; font-size: 26px; font-weight: 800; color: #991b1b; line-height: 1.1;">${absentsCount}</span>
+                      <span style="display: block; font-size: 12px; font-weight: 700; color: #991b1b; margin-top: 4px;">Absents</span>
+                      <span style="display: block; font-size: 10px; color: #b91c1c; margin-top: 2px;">${absentFamilies.length} famille(s)</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- DÉTAIL PAR TYPE DE REPAS -->
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-top: 10px;">
+                <div style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;">
+                  🍽️ Décompte par repas (invités présents) :
+                </div>
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size: 13px; color: #1e293b;">
+                  <tr>
+                    <td style="padding: 3px 0;">• <strong>Vin d'Honneur :</strong></td>
+                    <td style="padding: 3px 0; text-align: right;"><strong style="color: #13263B;">${vinCount}</strong> <span style="color: #64748b; font-size: 11px;">(${vinAdults} ad • ${vinChildren} enf • ${vinBabies} bb)</span></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 3px 0;">• <strong>Repas de Noces :</strong></td>
+                    <td style="padding: 3px 0; text-align: right;"><strong style="color: #13263B;">${repasCount}</strong> <span style="color: #64748b; font-size: 11px;">(${repasAdults} ad • ${repasChildren} enf • ${repasBabies} bb)</span></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 3px 0;">• <strong>Brunch du lendemain :</strong></td>
+                    <td style="padding: 3px 0; text-align: right;"><strong style="color: #13263B;">${brunchCount}</strong> <span style="color: #64748b; font-size: 11px;">(${brunchAdults} ad • ${brunchChildren} enf • ${brunchBabies} bb)</span></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- SECTION 1 : NON CONFIRMÉ -->
+            <div style="margin-bottom: 28px;">
+              <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px;">
+                <h3 style="margin: 0; color: #92400e; font-size: 15px; font-weight: 700;">
+                  ⏳ NON CONFIRMÉ (${nonConfirmeCount} invité(s) • ${nonConfirmeFamilies.length} famille(s))
+                </h3>
+              </div>
+              ${nonConfirmeHtml}
+            </div>
+
+            <!-- SECTION 2 : PRÉSENTS -->
+            <div style="margin-bottom: 28px;">
+              <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px;">
+                <h3 style="margin: 0; color: #166534; font-size: 15px; font-weight: 700;">
+                  ✅ PRÉSENTS (${presentsCount} invité(s) • ${presentFamilies.length} famille(s))
+                </h3>
+              </div>
+              ${presentsHtml}
+            </div>
+
+            <!-- SECTION 3 : ABSENTS -->
+            <div style="margin-bottom: 24px;">
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #dc2626; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px;">
+                <h3 style="margin: 0; color: #991b1b; font-size: 15px; font-weight: 700;">
+                  ❌ ABSENTS (${absentsCount} invité(s) • ${absentFamilies.length} famille(s))
+                </h3>
+              </div>
+              ${absentsHtml}
+            </div>
+
+            <!-- PIED DE PAGE & SIGNATURE -->
+            <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b; line-height: 1.6;">
+              <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 12px;">
+                <tr>
+                  <td style="vertical-align: middle; padding-right: 14px;">
+                    <img src="cid:weddingLogo" alt="Valentine & Jean" width="44" height="44" style="display: block; width: 44px; height: 44px; border-radius: 50%;" />
+                  </td>
+                  <td style="vertical-align: middle;">
+                    <span style="font-size: 16px; font-weight: 600; color: #3B6E9E; display: block;">Valentine &amp; Jean</span>
+                    <span style="font-size: 11px; color: #B58838; letter-spacing: 0.5px; text-transform: uppercase;">17 Avril 2027</span>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                🤖 Ce récapitulatif est généré automatiquement par le bot récapitulatif chaque vendredi à 20h00 pour le suivi des invités.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    const text = `MARIAGE VALENTINE & JEAN — 17 AVRIL 2027
+RÉCAPITULATIF INVITÉS : ${host.label.toUpperCase()}
+Point arrêté au : ${dateFormatted}
+
+==================================================
+DÉCOMPTE GLOBAL
+==================================================
+- Total Invités : ${totalInvited} (${totalAdults} adultes, ${totalChildren} enfants, ${totalBabies} bébés)
+- Présents : ${presentsCount} (${presentAdults} adultes, ${presentChildren} enfants, ${presentBabies} bébés)
+- Non confirmés : ${nonConfirmeCount} (${nonConfirmeFamilies.length} familles)
+- Absents : ${absentsCount} (${absentFamilies.length} familles)
+
+Décompte par repas (présents) :
+- Vin d'Honneur : ${vinCount} (${vinAdults} ad, ${vinChildren} enf, ${vinBabies} bb)
+- Repas de Noces : ${repasCount} (${repasAdults} ad, ${repasChildren} enf, ${repasBabies} bb)
+- Brunch : ${brunchCount} (${brunchAdults} ad, ${brunchChildren} enf, ${brunchBabies} bb)
+
+==================================================
+1. SECTION "NON CONFIRMÉ" (${nonConfirmeCount} personnes)
+==================================================
+${nonConfirmeFamilies.length === 0 ? 'Toutes les familles de cet hôte ont déjà répondu.' : nonConfirmeFamilies.map((f) => `
+* Famille ${f.familyName} (${f.email || 'Email non renseigné'}) :
+${f.members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} [Invité(e) : ${invitedEventsOf(m)}]`).join('\n')}`).join('\n')}
+
+==================================================
+2. SECTION "PRÉSENTS" (${presentsCount} personnes)
+==================================================
+${presentFamilies.length === 0 ? 'Aucune présence confirmée pour le moment.' : presentFamilies.map(({ family, members }) => `
+* Famille ${family.familyName} :
+${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : ${eventsOf(m)}${m.dietaryNotes ? ' [Régime: ' + m.dietaryNotes + ']' : ''}`).join('\n')}${family.lastMessage ? '\n  Message: « ' + family.lastMessage + ' »' : ''}`).join('\n')}
+
+==================================================
+3. SECTION "ABSENTS" (${absentsCount} personnes)
+==================================================
+${absentFamilies.length === 0 ? 'Aucun absent déclaré.' : absentFamilies.map(({ family, members }) => `
+* Famille ${family.familyName} :
+${members.map((m: any) => `  - ${m.firstName} ${m.lastName} ${memberTypeText(m)} : Absent(e)`).join('\n')}${family.lastMessage ? '\n  Message: « ' + family.lastMessage + ' »' : ''}`).join('\n')}
+
+--------------------------------------------------
+Valentine & Jean — 17 Avril 2027
+Bot de suivi hebdomadaire du vendredi 20h`;
+
+    mails.push({
+      to: recipient,
+      replyTo: COUPLE_RSVP_ADDRESS,
+      subject: `[Mariage JV2027] Récapitulatif invités ${host.label}`,
+      html,
+      text,
+      attachments: mailAttachmentsWithLogo,
+    });
+  }
+
+  await sendAll(mails);
+
+  return {
+    sentCount: mails.length,
+    details,
+  };
+}
+
