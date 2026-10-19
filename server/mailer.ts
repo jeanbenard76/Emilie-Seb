@@ -81,14 +81,23 @@ function getTransporter(): Transporter | null {
   return transporter;
 }
 
-async function sendMail(mail: { to: string; subject: string; html: string; text?: string; replyTo?: string; attachments?: any[] }) {
+async function sendMail(mail: {
+  from?: { name: string; address: string } | string;
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  replyTo?: string;
+  attachments?: any[];
+}) {
   const smtp = getTransporter();
   if (!smtp) {
     console.log(`[Mail] EMAIL_ADDRESS / EMAIL_PASSWORD absents : email non envoyé à ${mail.to} (« ${mail.subject} »)`);
     return;
   }
+  const defaultFrom = { name: "Mariage Valentine & Jean", address: COUPLE_RSVP_ADDRESS };
   await smtp.sendMail({
-    from: { name: "Mariage Valentine & Jean", address: process.env.EMAIL_ADDRESS! },
+    from: mail.from || defaultFrom,
     ...mail,
   });
   console.log(`[Mail] ✅ Email envoyé à ${mail.to} (« ${mail.subject} »)`);
@@ -1051,7 +1060,7 @@ export async function sendHostRecapEmails(allFamilies: any[]): Promise<{ sentCou
     hostsToProcess.push({ id: "unassigned", label: "Sans hôte assigné" });
   }
 
-  const recipient = process.env.RECAP_EMAIL_TO || process.env.EMAIL_ADDRESS || COUPLE_RSVP_ADDRESS;
+  const recipient = process.env.RECAP_EMAIL_TO || COUPLE_RSVP_ADDRESS;
   const now = new Date();
   const dateFormatted = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
@@ -1449,6 +1458,7 @@ Bot de suivi hebdomadaire du vendredi 20h`;
       .replace(/_+/g, "_");
 
     mails.push({
+      from: { name: "Valentine & Jean", address: COUPLE_RSVP_ADDRESS },
       to: recipient,
       replyTo: COUPLE_RSVP_ADDRESS,
       subject: `[Mariage JV2027] Récapitulatif invités ${host.label}`,
