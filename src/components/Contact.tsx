@@ -253,7 +253,7 @@ export default function Contact({ initialSubject = 'question' }: ContactProps = 
                   className="w-full px-4 py-2.5 rounded-xl border border-[#3B6FA0]/30 bg-white text-sm text-[#1A3A5C] focus:outline-none focus:border-[#F5C842] transition-colors font-serif"
                 >
                   <option value="question">Question sur l'organisation</option>
-                  <option value="rsvp">Question ou modification sur le RSVP</option>
+                  <option value="rsvp">Question sur la validation de présence</option>
                   <option value="lodging">Question hébergement</option>
                   <option value="surprise">Préparation d'une surprise (witnesses only)</option>
                   <option value="sweet-word">Un mot doux pour les mariés</option>

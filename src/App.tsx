@@ -104,7 +104,7 @@ export default function App() {
             { id: 'itinerary', label: 'Programme & Trajet' },
             { id: 'lodging', label: 'Où Dormir' },
             { id: 'registry', label: 'Liste de Mariage' },
-            { id: 'rsvp', label: 'RSVP', isSpecial: true },
+            { id: 'rsvp', label: 'Valider ma présence', isSpecial: true },
             { id: 'contact', label: 'Nous Contacter' },
           ].map((item) => (
             <button
@@ -159,7 +159,7 @@ export default function App() {
               { id: 'itinerary', label: 'Programme & Trajet' },
               { id: 'lodging', label: 'Où Dormir' },
               { id: 'registry', label: 'Liste de Mariage' },
-              { id: 'rsvp', label: 'RSVP', isSpecial: true },
+              { id: 'rsvp', label: 'Valider ma présence', isSpecial: true },
               { id: 'contact', label: 'Nous Contacter' },
             ].map((item) => (
               <button

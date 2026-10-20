@@ -45,7 +45,7 @@ const COUPLE_CONTACT_ADDRESS = "valentinetjean+contactmariage@etik.com";
 // Same values as the <select> of the contact form (src/components/Contact.tsx)
 const CONTACT_SUBJECT_LABELS: Record<string, string> = {
   question: "Question sur l'organisation",
-  rsvp: "Question ou modification sur le RSVP",
+  rsvp: "Question sur la validation de présence",
   lodging: "Question hébergement",
   surprise: "Préparation d'une surprise",
   "sweet-word": "Un mot doux pour les mariés",
