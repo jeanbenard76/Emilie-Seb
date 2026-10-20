@@ -16,15 +16,25 @@ interface ContactMessage {
   date: string;
 }
 
-export default function Contact() {
+interface ContactProps {
+  initialSubject?: string;
+}
+
+export default function Contact({ initialSubject = 'question' }: ContactProps = {}) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('question');
+  const [subject, setSubject] = useState(initialSubject);
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
   const [honeypot, setHoneypot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (initialSubject) {
+      setSubject(initialSubject);
+    }
+  }, [initialSubject]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,6 +253,7 @@ export default function Contact() {
                   className="w-full px-4 py-2.5 rounded-xl border border-[#3B6FA0]/30 bg-white text-sm text-[#1A3A5C] focus:outline-none focus:border-[#F5C842] transition-colors font-serif"
                 >
                   <option value="question">Question sur l'organisation</option>
+                  <option value="rsvp">Question ou modification sur le RSVP</option>
                   <option value="lodging">Question hébergement</option>
                   <option value="surprise">Préparation d'une surprise (witnesses only)</option>
                   <option value="sweet-word">Un mot doux pour les mariés</option>

@@ -41,6 +41,7 @@ const pageFromPath = (path: string): PageType => {
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activePage, setActivePage] = useState<PageType>('home');
+  const [contactSubject, setContactSubject] = useState<string>('question');
 
   // On load: restore the page from the URL (path, or legacy ?admin=1 query).
   // The admin password itself is always asked via the browser prompt, never stored.
@@ -60,8 +61,9 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  const handlePageChange = (page: PageType) => {
+  const handlePageChange = (page: PageType, initialContactSubject: string = 'question') => {
     setActivePage(page);
+    setContactSubject(initialContactSubject);
     setMobileMenuOpen(false);
     const path = PAGE_PATHS[page] || '/';
     if (window.location.pathname !== path) {
@@ -289,14 +291,14 @@ export default function App() {
         {/* RSVP FORM PAGE */}
         {activePage === 'rsvp' && (
           <div id="rsvp-page" className="py-2 sm:py-8 animate-fade-in">
-            <RSVPForm onNavigateToContact={() => handlePageChange('contact')} />
+            <RSVPForm onNavigateToContact={() => handlePageChange('contact', 'rsvp')} />
           </div>
         )}
 
         {/* CONTACT PAGE */}
         {activePage === 'contact' && (
           <div id="contact-page" className="py-2 sm:py-8 animate-fade-in">
-            <Contact />
+            <Contact initialSubject={contactSubject} />
           </div>
         )}
 

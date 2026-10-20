@@ -50,6 +50,7 @@ interface ContactMessage {
 // Same values as the <select> of the contact form (Contact.tsx)
 const CONTACT_SUBJECT_LABELS: Record<string, string> = {
   question: "Question sur l'organisation",
+  rsvp: "Question ou modification sur le RSVP",
   lodging: 'Question hébergement',
   surprise: "Préparation d'une surprise",
   'sweet-word': 'Un mot doux pour les mariés',
