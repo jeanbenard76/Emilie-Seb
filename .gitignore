@@ -14,3 +14,6 @@ wedding.db
 # Notes locales (jamais versionnées)
 NOTES-SECURITE-LOCAL.md
 
+# Windows
+desktop.ini
+Thumbs.db
