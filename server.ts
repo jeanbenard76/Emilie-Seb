@@ -118,19 +118,13 @@ async function startServer() {
     res.json({ ok: true, canSeeOptionalNotes: isFull });
   });
 
-  // Get all families or search by query
-  app.get("/api/families", (req, res) => {
+  // Full guest list (members, answers, emails, allergies, hosts): admin dashboard only
+  app.get("/api/families", requireAdmin, (req, res) => {
     try {
-      const provided = (req.headers["x-admin-token"] || req.query.key) as string | undefined;
-      const access = getAdminAccess(provided);
-
-      const { q } = req.query;
-      let families = typeof q === "string" && q.trim()
-        ? searchFamilies(q)
-        : getAllFamiliesWithMembers();
+      let families = getAllFamiliesWithMembers();
 
       // Si l'utilisateur n'a pas accès complet, on masque le mot optionnel (lastMessage)
-      if (!access.isFull) {
+      if (!(req as any).isAdminFull) {
         families = families.map((fam: any) => ({
           ...fam,
           lastMessage: "",
@@ -138,6 +132,33 @@ async function startServer() {
       }
 
       res.json(families);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Public household search for the RSVP form: at least 3 characters, at most 10 results,
+  // and only what a guest needs to pick their household (never emails, answers, allergies or hosts).
+  app.get("/api/families/search", (req, res) => {
+    try {
+      const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+      if (q.length < 3) return res.json([]);
+
+      const results = searchFamilies(q).slice(0, 10).map((fam: any) => ({
+        id: fam.id,
+        familyName: fam.familyName,
+        hasResponded: fam.hasResponded,
+        respondedAt: fam.respondedAt,
+        members: fam.members.map((m: any) => ({
+          id: m.id,
+          firstName: m.firstName,
+          lastName: m.lastName,
+          isChild: m.isChild,
+          isBaby: m.isBaby,
+          invitedTo: m.invitedTo,
+        })),
+      }));
+      res.json(results);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

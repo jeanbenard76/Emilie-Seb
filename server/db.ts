@@ -228,20 +228,19 @@ export function getAllFamiliesWithMembers() {
 }
 
 /**
- * Search families or members by query string.
+ * Search families whose name or members' names contain every word of the query
+ * (case and accent insensitive). An empty query matches nothing.
  */
 export function searchFamilies(query: string) {
-  const all = getAllFamiliesWithMembers();
-  const q = query.trim().toLowerCase();
-  if (!q) return all;
+  const normalize = (str: string) => str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const terms = normalize(query.trim()).split(/\s+/).filter(Boolean);
+  if (!terms.length) return [];
 
-  return all.filter((fam) => {
-    if (fam.familyName.toLowerCase().includes(q)) return true;
-    return fam.members.some(
-      (m: any) =>
-        m.firstName.toLowerCase().includes(q) ||
-        m.lastName.toLowerCase().includes(q)
+  return getAllFamiliesWithMembers().filter((fam) => {
+    const haystack = normalize(
+      [fam.familyName, ...fam.members.map((m: any) => `${m.firstName} ${m.lastName}`)].join(' ')
     );
+    return terms.every((term) => haystack.includes(term));
   });
 }
 
@@ -267,8 +266,8 @@ export function submitRSVP(data: {
       [famId, data.familyName, data.email]
     );
   } else {
-    // Update family email and mark has_responded
-    db.run("UPDATE families SET email = ?, notes = 'has_responded', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [
+    // Update family email (an empty one keeps the stored email: guests no longer see it) and mark has_responded
+    db.run("UPDATE families SET email = COALESCE(NULLIF(?, ''), email), notes = 'has_responded', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [
       data.email,
       famId,
     ]);

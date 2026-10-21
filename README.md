@@ -87,9 +87,9 @@ La base est réinitialisée (5 familles d'exemple re-semées) **uniquement** si 
 
 ## 4. Sécurité
 
-- Routes protégées par `ADMIN_TOKEN` (header `x-admin-token` ou `?key=` pour les liens de téléchargement) : `/api/admin/*`, `GET /api/rsvps`, `POST /api/registry`.
+- Routes protégées par `ADMIN_TOKEN` (header `x-admin-token` ou `?key=` pour les liens de téléchargement) : `/api/admin/*`, `GET /api/families`, `GET /api/rsvps`, `POST /api/registry`.
 - **Espace Mariés** : lien « Admin » dans le pied de page → le navigateur demande le mot de passe (prompt natif) **à chaque visite**, vérifié côté serveur via `GET /api/admin/verify`. Jamais stocké côté navigateur.
-- Routes publiques (nécessaires au formulaire invité) : `GET /api/families` (recherche du nom), `GET /api/stats`, `POST /api/rsvp` et `POST /api/contact` (limités ensemble à 10 envois / 10 min / IP), `GET /api/registry`, `GET /api/health`.
+- Routes publiques (nécessaires au formulaire invité) : `GET /api/families/search?q=` (recherche du nom : 3 caractères minimum, 10 résultats maximum, uniquement noms, prénoms et événements invités — jamais la liste complète, les emails, les réponses, les allergies ni les hôtes), `GET /api/stats`, `POST /api/rsvp` et `POST /api/contact` (limités ensemble à 10 envois / 10 min / IP), `GET /api/registry`, `GET /api/health`.
 - Le HTML des emails échappe les saisies des invités ; les requêtes SQL sont paramétrées.
 
 ## 5. Pièges connus (lire avant de toucher au déploiement)
@@ -127,10 +127,11 @@ docker build -t wedding . && docker run -p 3000:3000 -e ADMIN_TOKEN=test -e DB_P
 | Méthode & route | Accès | Description |
 |---|---|---|
 | `GET /api/health` | public | statut du serveur |
-| `GET /api/families[?q=nom]` | public | familles + membres (recherche invité) |
+| `GET /api/families/search?q=nom` | public | recherche d'un foyer par l'invité (champs minimaux) |
 | `GET /api/stats` | public | statistiques agrégées |
 | `POST /api/rsvp` | public (rate-limité) | soumission d'une réponse |
 | `GET /api/registry` | public | liste de cadeaux (JSON) |
+| `GET /api/families` | token | liste complète : familles, membres, réponses, emails |
 | `GET /api/admin/verify` | token | validation du mot de passe admin |
 | `GET /api/rsvps` | token | journal des réponses |
 | `POST /api/admin/update-invitation` | token | portées d'invitation d'une famille |

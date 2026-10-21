@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, Search, User, Baby, Footprints, Heart, Users, ChevronRight, CheckCircle2, AlertCircle, Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, MessageSquare, Utensils, Clock, Mail } from 'lucide-react';
 import ChildIcon from './ChildIcon';
@@ -15,10 +15,13 @@ interface RSVPFormProps {
 }
 
 export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
-  const [families, setFamilies] = useState<GuestFamily[]>(() => getStoredFamilies());
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<GuestFamily[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedFamily, setSelectedFamily] = useState<GuestFamily | null>(null);
+  // True when a previous answer given on this device was restored into the form
+  const [restoredAnswers, setRestoredAnswers] = useState(false);
 
   // Editable members list for the selected family
   const [members, setMembers] = useState<FamilyMember[]>([]);
@@ -33,35 +36,41 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const [showAdmin, setShowAdmin] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [allRSVPs, setAllRSVPs] = useState<any[]>([]);
-  const [adminFilter, setAdminFilter] = useState<'all' | 'attending' | 'absent' | 'dietary'>('all');
-  const [adminSearch, setAdminSearch] = useState('');
 
-  // Load live families & stats on component mount
+  // Load live stats on component mount
   useEffect(() => {
-    fetchFamilies();
     fetchStats();
     fetchRSVPs();
   }, []);
 
-  const fetchFamilies = async () => {
-    try {
-      const res = await fetch('/api/families');
-      if (res.ok) {
-        const text = await res.text();
-        try {
-          const data = JSON.parse(text);
-          if (Array.isArray(data) && data.length > 0) {
-            setFamilies(data);
-            return;
-          }
-        } catch (jsonErr) {}
-      }
-    } catch (err) {
-      console.log('Utilisation du mode hors-ligne pour la recherche invités');
+  // Households are searched on the server: the guest list is never sent to the browser
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 3) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
     }
-    setFamilies(getStoredFamilies());
-  };
 
+    const controller = new AbortController();
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/families/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+        const data = res.ok ? await res.json() : [];
+        setSuggestions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') setSuggestions([]);
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchQuery]);
 
   const fetchStats = async () => {
     try {
@@ -87,64 +96,30 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
     }
   };
 
-  const handleUpdateInvitation = async (
-    familyId: string,
-    invitedVin: boolean,
-    invitedRepas: boolean,
-    invitedBrunch: boolean
-  ) => {
-    try {
-      const res = await fetch('/api/admin/update-invitation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ familyId, invitedVin, invitedRepas, invitedBrunch }),
-      });
-      if (res.ok) {
-        await fetchFamilies();
-        await fetchStats();
-      }
-    } catch (err) {
-      console.error('Erreur mise à jour invitation', err);
-    }
-  };
-
-  // Search filter matching families or individual member names
-  const filteredSuggestions = useMemo(() => {
-    const q = searchQuery.trim();
-    if (!q) return [];
-    
-    const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const searchTerms = normalize(q).split(/\s+/);
-
-    return families.filter((fam) => {
-      const famString = normalize([
-        fam.familyName,
-        ...fam.members.map((m) => `${m.firstName} ${m.lastName}`)
-      ].join(' '));
-      
-      return searchTerms.every((term) => famString.includes(term));
-    });
-  }, [searchQuery, families]);
-
   // Handle selecting a family from suggestions database
   const handleSelectFamily = (fam: GuestFamily) => {
+    // The server never sends previous answers: restore them only if they were given on this device
+    const previous = fam.hasResponded ? getStoredFamilies().find((f) => f.id === fam.id) : undefined;
+
     setSelectedFamily(fam);
+    setRestoredAnswers(Boolean(previous));
     setSearchQuery(`Famille ${fam.familyName}`);
-    setEmail(fam.hasResponded ? (fam.email || '') : '');
+    setEmail(previous?.email || '');
     setMessage('');
 
     const sanitizedMembers = fam.members.map((m) => {
       const inv = m.invitedTo || { vinHonneur: true, repasNoces: true, brunchLendemain: true };
-      const isAttending = fam.hasResponded ? (m.isAttending ?? true) : true;
+      const prev = previous?.members.find((p) => p.id === m.id);
       return {
         ...m,
-        isAttending,
+        isAttending: prev ? Boolean(prev.isAttending) : true,
         invitedTo: inv,
         events: {
-          vinHonneur: inv.vinHonneur !== false ? (fam.hasResponded ? Boolean(m.events?.vinHonneur) : true) : false,
-          repasNoces: inv.repasNoces ? (fam.hasResponded ? Boolean(m.events?.repasNoces) : true) : false,
-          brunchLendemain: inv.brunchLendemain ? (fam.hasResponded ? Boolean(m.events?.brunchLendemain) : true) : false,
+          vinHonneur: inv.vinHonneur !== false ? (prev ? Boolean(prev.events?.vinHonneur) : true) : false,
+          repasNoces: inv.repasNoces ? (prev ? Boolean(prev.events?.repasNoces) : true) : false,
+          brunchLendemain: inv.brunchLendemain ? (prev ? Boolean(prev.events?.brunchLendemain) : true) : false,
         },
+        dietaryNotes: prev?.dietaryNotes || '',
       };
     });
 
@@ -272,10 +247,9 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
         throw new Error("Une erreur est survenue lors de l'enregistrement de votre réponse.");
       }
 
-      // Save to localStorage for offline cache
+      // Save to localStorage: lets this device restore the answers on a later update
       saveRSVPToLocalStorage(payload);
 
-      await fetchFamilies();
       await fetchStats();
       await fetchRSVPs();
       setSubmittedEmail(finalEmail);
@@ -315,21 +289,6 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
 
   const attendingAdults = members.filter((m) => m.isAttending && !m.isChild).length;
   const attendingChildren = members.filter((m) => m.isAttending && m.isChild).length;
-
-  // Filtered families list for Admin audit view
-  const adminFilteredFamilies = useMemo(() => {
-    const q = adminSearch.trim().toLowerCase();
-    return families.filter((fam) => {
-      // Name or search match
-      const nameMatch = !q || fam.familyName.toLowerCase().includes(q) || fam.members.some((m) => `${m.firstName} ${m.lastName}`.toLowerCase().includes(q));
-      if (!nameMatch) return false;
-
-      if (adminFilter === 'attending') return fam.members.some((m) => m.isAttending);
-      if (adminFilter === 'absent') return fam.members.every((m) => !m.isAttending);
-      if (adminFilter === 'dietary') return fam.members.some((m) => Boolean(m.dietaryNotes && m.dietaryNotes.trim()));
-      return true;
-    });
-  }, [families, adminFilter, adminSearch]);
 
   return (
     <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto px-4 lg:px-8 py-4 sm:py-8 pb-12 sm:pb-16" id="rsvp-section">
@@ -528,8 +487,8 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                 {/* Database Suggestion Dropdown */}
                 {showSuggestions && searchQuery.trim().length >= 3 && (
                   <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-[#3B6FA0]/20 rounded-2xl shadow-lg max-h-[260px] overflow-y-auto divide-y divide-slate-100">
-                    {filteredSuggestions.length > 0 ? (
-                      filteredSuggestions.map((fam) => (
+                    {suggestions.length > 0 ? (
+                      suggestions.map((fam) => (
                         <div
                           key={fam.id}
                           onClick={() => handleSelectFamily(fam)}
@@ -560,6 +519,11 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                           </div>
                         </div>
                       ))
+                    ) : isSearching ? (
+                      <div className="p-4 text-xs text-[#5A5040] font-sans italic flex items-center gap-2">
+                        <Search className="w-4 h-4 text-[#C4A475]" />
+                        <span>Recherche en cours…</span>
+                      </div>
                     ) : (
                       <div
                         onClick={handleCreateCustomFamily}
@@ -598,7 +562,9 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                         </span>
                       </p>
                       <p className="text-xs font-sans font-medium text-[#3B6FA0] mt-1.5">
-                        Vous pouvez encore modifier vos choix ci-dessous et enregistrer votre mise à jour.
+                        {restoredAnswers
+                          ? 'Vous pouvez encore modifier vos choix ci-dessous et enregistrer votre mise à jour.'
+                          : 'Pour protéger vos données, votre réponse précédente n’est pas réaffichée. Votre mise à jour la remplacera : pensez à indiquer de nouveau les éventuels régimes ou allergies.'}
                       </p>
                     </div>
                   </div>
