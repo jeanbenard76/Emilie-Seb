@@ -65,13 +65,54 @@ const adminHeaders = (): Record<string, string> => {
   return token ? { 'x-admin-token': token } : {};
 };
 
+// Helpers to determine invitation scope per member & family
+export const isMemberInvitedToVin = (m: any): boolean => {
+  return m.invitedTo ? m.invitedTo.vinHonneur !== false : true;
+};
+
+export const isMemberInvitedToRepas = (m: any): boolean => {
+  return Boolean(m.invitedTo?.repasNoces || m.events?.repasNoces);
+};
+
+export const isMemberInvitedToBrunch = (m: any): boolean => {
+  return Boolean(m.invitedTo?.brunchLendemain || m.events?.brunchLendemain);
+};
+
+export const isFamilyInvitedToVin = (fam: GuestFamily): boolean => {
+  return fam.members.some(isMemberInvitedToVin);
+};
+
+export const isFamilyInvitedToRepas = (fam: GuestFamily): boolean => {
+  return fam.members.some(isMemberInvitedToRepas);
+};
+
+export const isFamilyInvitedToBrunch = (fam: GuestFamily): boolean => {
+  return fam.members.some(isMemberInvitedToBrunch);
+};
+
+export const isFamilyInvitedToVinOnly = (fam: GuestFamily): boolean => {
+  return isFamilyInvitedToVin(fam) && !isFamilyInvitedToRepas(fam) && !isFamilyInvitedToBrunch(fam);
+};
+
+export const isFamilyInvitedToRepasNoBrunch = (fam: GuestFamily): boolean => {
+  return isFamilyInvitedToRepas(fam) && !isFamilyInvitedToBrunch(fam);
+};
+
+export const isFamilyInvitedToAllThree = (fam: GuestFamily): boolean => {
+  return isFamilyInvitedToVin(fam) && isFamilyInvitedToRepas(fam) && isFamilyInvitedToBrunch(fam);
+};
+
 export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashboardProps) {
   const [families, setFamilies] = useState<GuestFamily[]>([]);
   const [stats, setStats] = useState<RSVPStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'attending' | 'absent' | 'dietary'>('all');
-  const [filterEvent, setFilterEvent] = useState<'all' | 'vin' | 'repas' | 'brunch'>('all');
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'attending' | 'pending' | 'absent' | 'dietary' | 'attending_vin' | 'attending_repas' | 'attending_brunch'
+  >('all');
+  const [filterInvitation, setFilterInvitation] = useState<
+    'all' | 'vin' | 'repas' | 'brunch' | 'vin_only' | 'repas_no_brunch' | 'all_three'
+  >('all');
   const [filterHost, setFilterHost] = useState<'all' | 'unassigned' | 'Valentine&Jean' | 'Anny&Marc' | 'Anne&Visith'>('all');
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [editingFamily, setEditingFamily] = useState<GuestFamily | null>(null);
@@ -451,6 +492,44 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     };
   }, [families]);
 
+  // Compute breakdown by invitation scope
+  const invitationStats = useMemo(() => {
+    let vinFam = 0, vinGuests = 0;
+    let repasFam = 0, repasGuests = 0;
+    let brunchFam = 0, brunchGuests = 0;
+    let vinOnlyFam = 0, vinOnlyGuests = 0;
+
+    breakdownFamilies.forEach((fam) => {
+      const hasFamVin = isFamilyInvitedToVin(fam);
+      const hasFamRepas = isFamilyInvitedToRepas(fam);
+      const hasFamBrunch = isFamilyInvitedToBrunch(fam);
+      const hasFamVinOnly = isFamilyInvitedToVinOnly(fam);
+
+      if (hasFamVin) vinFam++;
+      if (hasFamRepas) repasFam++;
+      if (hasFamBrunch) brunchFam++;
+      if (hasFamVinOnly) vinOnlyFam++;
+
+      fam.members.forEach((m) => {
+        const invVin = isMemberInvitedToVin(m);
+        const invRepas = isMemberInvitedToRepas(m);
+        const invBrunch = isMemberInvitedToBrunch(m);
+
+        if (invVin) vinGuests++;
+        if (invRepas) repasGuests++;
+        if (invBrunch) brunchGuests++;
+        if (invVin && !invRepas && !invBrunch) vinOnlyGuests++;
+      });
+    });
+
+    return {
+      vin: { families: vinFam, guests: vinGuests },
+      repas: { families: repasFam, guests: repasGuests },
+      brunch: { families: brunchFam, guests: brunchGuests },
+      vinOnly: { families: vinOnlyFam, guests: vinOnlyGuests },
+    };
+  }, [breakdownFamilies]);
+
   // Filtered families list
   const filteredFamilies = useMemo(() => {
     return families.filter((fam) => {
@@ -459,23 +538,37 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       const nameMatch = !q || fam.familyName.toLowerCase().includes(q) || fam.members.some((m) => `${m.firstName} ${m.lastName}`.toLowerCase().includes(q));
       if (!nameMatch) return false;
 
-      // 2. Filter Status
-      if (filterStatus === 'attending' && !fam.members.some((m) => m.isAttending)) return false;
-      if (filterStatus === 'absent' && fam.members.some((m) => m.isAttending)) return false;
-      if (filterStatus === 'dietary' && !fam.members.some((m) => m.dietaryNotes && m.dietaryNotes.trim())) return false;
-
-      // 3. Filter Event
-      if (filterEvent === 'vin' && !fam.members.some((m) => m.isAttending && m.events?.vinHonneur)) return false;
-      if (filterEvent === 'repas' && !fam.members.some((m) => m.isAttending && m.events?.repasNoces)) return false;
-      if (filterEvent === 'brunch' && !fam.members.some((m) => m.isAttending && m.events?.brunchLendemain)) return false;
-
-      // 4. Filter Host
+      // 2. Filter Host
       if (filterHost === 'unassigned' && fam.invitedBy) return false;
       if (filterHost !== 'all' && filterHost !== 'unassigned' && fam.invitedBy !== filterHost) return false;
 
+      // 3. Filter Invitation Scope (Qui est invité à quoi)
+      if (filterInvitation === 'vin' && !isFamilyInvitedToVin(fam)) return false;
+      if (filterInvitation === 'repas' && !isFamilyInvitedToRepas(fam)) return false;
+      if (filterInvitation === 'brunch' && !isFamilyInvitedToBrunch(fam)) return false;
+      if (filterInvitation === 'vin_only' && !isFamilyInvitedToVinOnly(fam)) return false;
+      if (filterInvitation === 'repas_no_brunch' && !isFamilyInvitedToRepasNoBrunch(fam)) return false;
+      if (filterInvitation === 'all_three' && !isFamilyInvitedToAllThree(fam)) return false;
+
+      // 4. Filter Status & Attendance
+      const isResponded = Boolean(
+        fam.hasResponded ||
+        fam.respondedAt ||
+        fam.notes === 'has_responded' ||
+        (fam.lastMessage && fam.lastMessage.trim().length > 0)
+      );
+
+      if (filterStatus === 'attending' && !fam.members.some((m) => m.isAttending)) return false;
+      if (filterStatus === 'pending' && isResponded) return false;
+      if (filterStatus === 'absent' && (!isResponded || fam.members.some((m) => m.isAttending))) return false;
+      if (filterStatus === 'dietary' && !fam.members.some((m) => m.dietaryNotes && m.dietaryNotes.trim())) return false;
+      if (filterStatus === 'attending_vin' && !fam.members.some((m) => m.isAttending && m.events?.vinHonneur)) return false;
+      if (filterStatus === 'attending_repas' && !fam.members.some((m) => m.isAttending && m.events?.repasNoces)) return false;
+      if (filterStatus === 'attending_brunch' && !fam.members.some((m) => m.isAttending && m.events?.brunchLendemain)) return false;
+
       return true;
     });
-  }, [families, search, filterStatus, filterEvent, filterHost]);
+  }, [families, search, filterHost, filterInvitation, filterStatus]);
 
   // Waiting for authentication (native browser prompt)
   if (!authed) {
@@ -712,11 +805,28 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       <div className="bg-white rounded-3xl border border-[#3B6FA0]/15 p-6 space-y-5 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
-            <h3 className="font-display text-xl text-[#13263B] font-semibold">
-              Requêteur des Réponses &amp; Invités ({filteredFamilies.length} familles)
-            </h3>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="font-display text-xl text-[#13263B] font-semibold">
+                Requêteur des Réponses &amp; Invités ({filteredFamilies.length} familles)
+              </h3>
+              {(search.trim() || filterInvitation !== 'all' || filterStatus !== 'all' || filterHost !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearch('');
+                    setFilterInvitation('all');
+                    setFilterStatus('all');
+                    setFilterHost('all');
+                  }}
+                  className="text-[11px] text-[#3B6FA0] hover:text-red-600 hover:underline cursor-pointer flex items-center gap-1 font-sans font-semibold bg-blue-50/70 hover:bg-red-50 px-2 py-0.5 rounded-full transition-colors"
+                  title="Réinitialiser tous les filtres"
+                >
+                  <X className="w-3 h-3" />
+                  Effacer les filtres
+                </button>
+              )}
+            </div>
             <p className="text-xs text-[#5A5040] font-serif italic">
-              Filtrez instantanément par nom, statut de présence ou type de repas.
+              Filtrez instantanément par invitation (Vin d'honneur, Dîner, Brunch), statut de présence ou par hôte.
             </p>
           </div>
 
@@ -734,28 +844,36 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
               />
             </div>
 
-            {/* Status Filter */}
+            {/* Invitation Scope Filter */}
+            <select
+              value={filterInvitation}
+              onChange={(e: any) => setFilterInvitation(e.target.value)}
+              className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto font-medium"
+              title="Filtrer selon le périmètre d'invitation (Vin d'honneur, Dîner, Brunch)"
+            >
+              <option value="all">Toutes les invitations</option>
+              <option value="vin">🍸 Invités au Vin d'honneur</option>
+              <option value="repas">🍽️ Invités au Dîner (Repas)</option>
+              <option value="brunch">🥐 Invités au Brunch</option>
+              <option value="vin_only">🍸 Vin d'honneur seul</option>
+              <option value="repas_no_brunch">🍽️ Dîner sans Brunch</option>
+              <option value="all_three">👑 Tout (Vin + Dîner + Brunch)</option>
+            </select>
+
+            {/* Status / Presence Filter */}
             <select
               value={filterStatus}
               onChange={(e: any) => setFilterStatus(e.target.value)}
               className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto"
             >
-              <option value="all">Tous statuts</option>
-              <option value="attending">Présents uniquement</option>
-              <option value="absent">Absents uniquement</option>
-              <option value="dietary">Allergies / Régimes</option>
-            </select>
-
-            {/* Event Filter */}
-            <select
-              value={filterEvent}
-              onChange={(e: any) => setFilterEvent(e.target.value)}
-              className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto"
-            >
-              <option value="all">Tous événements</option>
-              <option value="vin">Présents au Vin</option>
-              <option value="repas">Présents au Repas</option>
-              <option value="brunch">Présents au Brunch</option>
+              <option value="all">Tous statuts de réponse</option>
+              <option value="attending">✅ Présents (au moins 1)</option>
+              <option value="pending">⏳ En attente de réponse</option>
+              <option value="absent">❌ Absents déclarés</option>
+              <option value="attending_vin">🍸 Présents au Vin</option>
+              <option value="attending_repas">🍽️ Présents au Dîner</option>
+              <option value="attending_brunch">🥐 Présents au Brunch</option>
+              <option value="dietary">🥗 Allergies / Régimes</option>
             </select>
 
             {/* Host Filter */}
@@ -836,6 +954,68 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
           )}
         </div>
 
+        {/* Invitation Scope Quick Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-100 pb-3">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+            <Utensils className="w-3 h-3 text-[#C4A475]" />
+            Invités à :
+          </span>
+          <button
+            onClick={() => setFilterInvitation('all')}
+            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              filterInvitation === 'all'
+                ? 'bg-[#13263B] text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Toutes ({breakdownFamilies.length})
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'vin' ? 'all' : 'vin')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterInvitation === 'vin'
+                ? 'bg-[#13263B] text-white shadow-xs'
+                : 'bg-blue-50 text-[#13263B] border border-blue-200 hover:bg-blue-100'
+            }`}
+          >
+            <span>🍸 Vin d'honneur</span>
+            <span className="text-[10px] opacity-80 font-mono">({invitationStats.vin.families} fam. / {invitationStats.vin.guests} pers.)</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'repas' ? 'all' : 'repas')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterInvitation === 'repas'
+                ? 'bg-[#C4A475] text-[#13263B] font-bold shadow-xs'
+                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <span>🍽️ Dîner (Repas)</span>
+            <span className="text-[10px] opacity-80 font-mono">({invitationStats.repas.families} fam. / {invitationStats.repas.guests} pers.)</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'brunch' ? 'all' : 'brunch')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterInvitation === 'brunch'
+                ? 'bg-amber-700 text-white shadow-xs'
+                : 'bg-orange-50 text-amber-900 border border-orange-200 hover:bg-orange-100'
+            }`}
+          >
+            <span>🥐 Brunch</span>
+            <span className="text-[10px] opacity-80 font-mono">({invitationStats.brunch.families} fam. / {invitationStats.brunch.guests} pers.)</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'vin_only' ? 'all' : 'vin_only')}
+            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterInvitation === 'vin_only'
+                ? 'bg-indigo-700 text-white shadow-xs'
+                : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
+            }`}
+          >
+            <span>🍸 Vin seul</span>
+            <span className="text-[10px] opacity-80 font-mono">({invitationStats.vinOnly.families} fam. / {invitationStats.vinOnly.guests} pers.)</span>
+          </button>
+        </div>
+
         {/* Query Results Cards List */}
         <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
           {filteredFamilies.length > 0 ? (
@@ -886,6 +1066,33 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                         <option value="Anne&Visith">Anne &amp; Visith</option>
                       </select>
 
+                      {/* Quick Family Invitation Scope Selector */}
+                      <select
+                        value={
+                          fam.members.length > 0 && fam.members.every(isMemberInvitedToVin) && fam.members.every(isMemberInvitedToRepas) && fam.members.every(isMemberInvitedToBrunch)
+                            ? 'all_three'
+                            : fam.members.length > 0 && fam.members.every(isMemberInvitedToVin) && fam.members.every(isMemberInvitedToRepas) && !fam.members.some(isMemberInvitedToBrunch)
+                            ? 'vin_repas'
+                            : fam.members.length > 0 && fam.members.every(isMemberInvitedToVin) && !fam.members.some(isMemberInvitedToRepas) && !fam.members.some(isMemberInvitedToBrunch)
+                            ? 'vin_only'
+                            : 'custom'
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'all_three') handleUpdateInvitation(fam.id, true, true, true);
+                          else if (val === 'vin_repas') handleUpdateInvitation(fam.id, true, true, false);
+                          else if (val === 'vin_only') handleUpdateInvitation(fam.id, true, false, false);
+                          else if (val === 'custom') setEditingFamily(fam);
+                        }}
+                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 bg-white hover:border-[#C4A475] transition-all cursor-pointer text-[#13263B]"
+                        title="Périmètre d'invitation de la famille (cliquez pour changer ou configurer par membre)"
+                      >
+                        <option value="all_three">🍸🍽️🥐 Vin + Dîner + Brunch</option>
+                        <option value="vin_repas">🍸🍽️ Vin + Dîner</option>
+                        <option value="vin_only">🍸 Vin d'honneur seul</option>
+                        <option value="custom">⚙️ Personnalisé par membre...</option>
+                      </select>
+
                       {isResponded ? (
                         <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full font-sans">
                           ✓ Répondu {fam.respondedAt ? `le ${formatDate(fam.respondedAt)}` : ''} ({attendingMembers.length} présent(s) / {absentMembers.length} absent(s))
@@ -896,7 +1103,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                         </span>
                       )}
                       
-                      <button onClick={() => setEditingFamily(fam)} className="p-1 text-slate-400 hover:text-[#3B6FA0] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Modifier la famille">
+                      <button onClick={() => setEditingFamily(fam)} className="p-1 text-slate-400 hover:text-[#3B6FA0] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Modifier la famille et les invitations détaillées">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button onClick={() => handleDeleteFamily(fam.id, fam.familyName)} className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Supprimer la famille">
@@ -929,33 +1136,72 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                           )}
                         </div>
 
-                        {/* Events participation or invitation scope */}
+                        {/* Scope d'invitation (qui est mis où) */}
+                        <div className="text-[10px] text-slate-600 flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100">
+                          <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Invité :</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-medium ${
+                              isMemberInvitedToVin(m)
+                                ? 'bg-blue-50 text-blue-900 border border-blue-200'
+                                : 'bg-slate-100 text-slate-300 line-through'
+                            }`}
+                            title={isMemberInvitedToVin(m) ? "Invité au Vin d'honneur" : "Non invité au Vin d'honneur"}
+                          >
+                            🍸 Vin
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-medium ${
+                              isMemberInvitedToRepas(m)
+                                ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                                : 'bg-slate-100 text-slate-300 line-through'
+                            }`}
+                            title={isMemberInvitedToRepas(m) ? "Invité au Repas de Noces (Dîner)" : "Non invité au Repas de Noces"}
+                          >
+                            🍽️ Dîner
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-medium ${
+                              isMemberInvitedToBrunch(m)
+                                ? 'bg-orange-50 text-orange-900 border border-orange-200'
+                                : 'bg-slate-100 text-slate-300 line-through'
+                            }`}
+                            title={isMemberInvitedToBrunch(m) ? "Invité au Brunch" : "Non invité au Brunch"}
+                          >
+                            🥐 Brunch
+                          </span>
+                        </div>
+
+                        {/* Réponse / Confirmation reçue (comment) */}
                         {isResponded ? (
-                          m.isAttending && (
-                            <div className="text-[10px] text-slate-600 flex items-center gap-1.5 flex-wrap pt-1">
-                              <span className={`px-2 py-0.5 rounded font-mono ${m.events?.vinHonneur ? 'bg-[#13263B] text-white' : 'bg-slate-100 text-slate-400 line-through'}`}>
-                                Vin
+                          <div className="text-[10px] flex items-center gap-1.5 flex-wrap pt-0.5">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Réponse :</span>
+                            {m.isAttending ? (
+                              <>
+                                {isMemberInvitedToVin(m) && (
+                                  <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-semibold ${m.events?.vinHonneur ? 'bg-[#13263B] text-white' : 'bg-slate-100 text-slate-400 line-through'}`}>
+                                    Vin {m.events?.vinHonneur ? '✓' : '✗'}
+                                  </span>
+                                )}
+                                {isMemberInvitedToRepas(m) && (
+                                  <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-semibold ${m.events?.repasNoces ? 'bg-[#C4A475] text-white' : 'bg-slate-100 text-slate-400 line-through'}`}>
+                                    Dîner {m.events?.repasNoces ? '✓' : '✗'}
+                                  </span>
+                                )}
+                                {isMemberInvitedToBrunch(m) && (
+                                  <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-semibold ${m.events?.brunchLendemain ? 'bg-amber-700 text-white' : 'bg-slate-100 text-slate-400 line-through'}`}>
+                                    Brunch {m.events?.brunchLendemain ? '✓' : '✗'}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-[10px] font-medium text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                                Déclaré absent
                               </span>
-                              <span className={`px-2 py-0.5 rounded font-mono ${m.events?.repasNoces ? 'bg-[#C4A475] text-white' : 'bg-slate-100 text-slate-400 line-through'}`}>
-                                Repas
-                              </span>
-                              <span className={`px-2 py-0.5 rounded font-mono ${m.events?.brunchLendemain ? 'bg-amber-700 text-white' : 'bg-slate-100 text-slate-400 line-through'}`}>
-                                Brunch
-                              </span>
-                            </div>
-                          )
+                            )}
+                          </div>
                         ) : (
-                          <div className="text-[10px] text-slate-500 flex items-center gap-1.5 flex-wrap pt-1">
-                            <span className="text-[9px] uppercase font-bold text-slate-400">Invité :</span>
-                            <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] ${m.invitedTo?.vinHonneur !== false ? 'bg-slate-100 text-[#13263B]' : 'bg-slate-50 text-slate-300 line-through'}`}>
-                              Vin
-                            </span>
-                            <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] ${m.invitedTo?.repasNoces ? 'bg-slate-100 text-[#13263B]' : 'bg-slate-50 text-slate-300 line-through'}`}>
-                              Repas
-                            </span>
-                            <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] ${m.invitedTo?.brunchLendemain ? 'bg-slate-100 text-[#13263B]' : 'bg-slate-50 text-slate-300 line-through'}`}>
-                              Brunch
-                            </span>
+                          <div className="text-[10px] text-amber-700/80 italic pt-0.5 flex items-center gap-1">
+                            <span>⏳ Réponse en attente</span>
                           </div>
                         )}
 
@@ -1072,13 +1318,16 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
 
         <button
           onClick={() => {
-            let csv = "ID Famille,Famille,Invité par,Prénom,Nom,Statut,Âge,Présent,Vin d'Honneur,Repas de Noces,Brunch,Régime/Allergies,Email\n";
+            let csv = "ID Famille,Famille,Invité par,Prénom,Nom,Statut,Âge,Invité Vin,Invité Dîner,Invité Brunch,Présent,Présent Vin,Présent Dîner,Présent Brunch,Régime/Allergies,Email\n";
             families.forEach((fam) => {
               const hostLabel = fam.invitedBy === 'Valentine&Jean' ? 'Valentine & Jean' : fam.invitedBy === 'Anny&Marc' ? 'Anny & Marc' : fam.invitedBy === 'Anne&Visith' ? 'Anne & Visith' : (fam.invitedBy || 'Non défini');
               fam.members.forEach((m: any) => {
+                const invVin = isMemberInvitedToVin(m) ? "Oui" : "Non";
+                const invRepas = isMemberInvitedToRepas(m) ? "Oui" : "Non";
+                const invBrunch = isMemberInvitedToBrunch(m) ? "Oui" : "Non";
                 csv += `"${fam.id}","${fam.familyName}","${hostLabel}","${m.firstName}","${m.lastName}","${
                   m.isBaby ? "Bébé" : (m.isChild ? "Enfant" : "Adulte")
-                }","${m.age || ""}","${m.isAttending ? "Oui" : "Non"}","${
+                }","${m.age || ""}","${invVin}","${invRepas}","${invBrunch}","${m.isAttending ? "Oui" : "Non"}","${
                   m.events?.vinHonneur ? "Oui" : "Non"
                 }","${m.events?.repasNoces ? "Oui" : "Non"}","${
                   m.events?.brunchLendemain ? "Oui" : "Non"

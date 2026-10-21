@@ -53,6 +53,10 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
     setMembers(members.filter(m => m.id !== id));
   };
 
+  const applyToAllInvitations = (vin: boolean, repas: boolean, brunch: boolean) => {
+    setMembers(members.map(m => ({ ...m, invitedVin: vin, invitedRepas: repas, invitedBrunch: brunch })));
+  };
+
   const handleSubmit = async () => {
     if (!familyName.trim() || members.length === 0) {
       setError('Veuillez renseigner un nom de famille et au moins un membre.');
@@ -66,20 +70,28 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
       familyName: familyName.trim(),
       email: email.trim(),
       invitedBy: invitedBy || null,
-      members: members.map(m => ({
-        id: m.id.startsWith('new-') ? null : m.id,
-        firstName: m.firstName.trim(),
-        lastName: m.lastName.trim(),
-        isChild: m.isChild,
-        isBaby: m.isBaby,
-        isAttending: m.isAttending,
-        invitedTo: {
-          vinHonneur: m.invitedVin,
-          repasNoces: m.invitedRepas,
-          brunchLendemain: m.invitedBrunch
-        },
-        dietaryNotes: m.dietaryNotes
-      }))
+      members: members.map(m => {
+        const existingMember = family.members.find(oldM => oldM.id === m.id);
+        return {
+          id: m.id.startsWith('new-') ? null : m.id,
+          firstName: m.firstName.trim(),
+          lastName: m.lastName.trim(),
+          isChild: m.isChild,
+          isBaby: m.isBaby,
+          isAttending: m.isAttending,
+          invitedTo: {
+            vinHonneur: m.invitedVin,
+            repasNoces: m.invitedRepas,
+            brunchLendemain: m.invitedBrunch
+          },
+          events: existingMember?.events || {
+            vinHonneur: m.invitedVin,
+            repasNoces: m.invitedRepas,
+            brunchLendemain: m.invitedBrunch
+          },
+          dietaryNotes: m.dietaryNotes
+        };
+      })
     };
 
     try {
@@ -133,11 +145,38 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <label className="block text-xs font-bold uppercase text-slate-500">Membres ({members.length})</label>
-          <button onClick={addMember} className="text-xs font-semibold text-[#3B6FA0] hover:text-[#C4A475] flex items-center gap-1 cursor-pointer">
-            <Plus className="w-4 h-4" /> Ajouter
-          </button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
+          <label className="block text-xs font-bold uppercase text-slate-600">Membres ({members.length})</label>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold uppercase text-slate-400">Périmètre famille :</span>
+            <button
+              type="button"
+              onClick={() => applyToAllInvitations(true, true, true)}
+              className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+              title="Inviter tous les membres au Vin, Dîner et Brunch"
+            >
+              🍸🍽️🥐 Tout
+            </button>
+            <button
+              type="button"
+              onClick={() => applyToAllInvitations(true, true, false)}
+              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#13263B] border border-blue-200 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+              title="Inviter tous les membres au Vin et au Dîner (sans Brunch)"
+            >
+              🍸🍽️ Vin + Dîner
+            </button>
+            <button
+              type="button"
+              onClick={() => applyToAllInvitations(true, false, false)}
+              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+              title="Inviter tous les membres uniquement au Vin d'honneur"
+            >
+              🍸 Vin seul
+            </button>
+            <button onClick={addMember} className="ml-auto text-xs font-semibold text-[#3B6FA0] hover:text-[#C4A475] flex items-center gap-1 cursor-pointer">
+              <Plus className="w-4 h-4" /> Ajouter un membre
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3 mb-6">

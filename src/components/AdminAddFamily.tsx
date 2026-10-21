@@ -40,6 +40,10 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
     setMembers(members.filter(m => m.id !== id));
   };
 
+  const applyToAllInvitations = (vin: boolean, repas: boolean, brunch: boolean) => {
+    setMembers(members.map(m => ({ ...m, invitedVin: vin, invitedRepas: repas, invitedBrunch: brunch })));
+  };
+
   const handleManualSubmit = async () => {
     if (!familyName.trim() || members.length === 0) {
       setError('Veuillez renseigner un nom de famille et au moins un membre.');
@@ -272,11 +276,42 @@ export default function AdminAddFamily({ onSuccess, adminHeaders }: AdminAddFami
           </div>
 
           <div className="pt-4">
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-[10px] font-bold uppercase text-slate-500">Membres de la famille</label>
-              <button onClick={addMember} className="cursor-pointer text-xs text-[#3B6FA0] hover:text-[#C4A475] font-semibold flex items-center gap-1">
-                <Plus className="w-3 h-3" /> Ajouter
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/60">
+              <label className="block text-[10px] font-bold uppercase text-slate-600">Membres ({members.length})</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {members.length > 0 && (
+                  <>
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Périmètre famille :</span>
+                    <button
+                      type="button"
+                      onClick={() => applyToAllInvitations(true, true, true)}
+                      className="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors"
+                      title="Inviter tous les membres au Vin, Dîner et Brunch"
+                    >
+                      🍸🍽️🥐 Tout
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyToAllInvitations(true, true, false)}
+                      className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-[#13263B] border border-blue-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors"
+                      title="Inviter tous les membres au Vin et Dîner (sans Brunch)"
+                    >
+                      🍸🍽️ Vin + Dîner
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyToAllInvitations(true, false, false)}
+                      className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors"
+                      title="Inviter tous les membres uniquement au Vin d'honneur"
+                    >
+                      🍸 Vin seul
+                    </button>
+                  </>
+                )}
+                <button onClick={addMember} className="cursor-pointer text-xs text-[#3B6FA0] hover:text-[#C4A475] font-semibold flex items-center gap-1 ml-auto">
+                  <Plus className="w-3 h-3" /> Ajouter un membre
+                </button>
+              </div>
             </div>
             
             <div className="space-y-2">
