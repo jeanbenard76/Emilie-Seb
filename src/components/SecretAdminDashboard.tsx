@@ -498,17 +498,20 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
     let repasFam = 0, repasGuests = 0;
     let brunchFam = 0, brunchGuests = 0;
     let vinOnlyFam = 0, vinOnlyGuests = 0;
+    let vinRepasFam = 0, vinRepasGuests = 0;
 
     breakdownFamilies.forEach((fam) => {
       const hasFamVin = isFamilyInvitedToVin(fam);
       const hasFamRepas = isFamilyInvitedToRepas(fam);
       const hasFamBrunch = isFamilyInvitedToBrunch(fam);
       const hasFamVinOnly = isFamilyInvitedToVinOnly(fam);
+      const hasFamVinRepas = isFamilyInvitedToRepasNoBrunch(fam);
 
       if (hasFamVin) vinFam++;
       if (hasFamRepas) repasFam++;
       if (hasFamBrunch) brunchFam++;
       if (hasFamVinOnly) vinOnlyFam++;
+      if (hasFamVinRepas) vinRepasFam++;
 
       fam.members.forEach((m) => {
         const invVin = isMemberInvitedToVin(m);
@@ -519,6 +522,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
         if (invRepas) repasGuests++;
         if (invBrunch) brunchGuests++;
         if (invVin && !invRepas && !invBrunch) vinOnlyGuests++;
+        if (invVin && invRepas && !invBrunch) vinRepasGuests++;
       });
     });
 
@@ -527,6 +531,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       repas: { families: repasFam, guests: repasGuests },
       brunch: { families: brunchFam, guests: brunchGuests },
       vinOnly: { families: vinOnlyFam, guests: vinOnlyGuests },
+      vinRepas: { families: vinRepasFam, guests: vinRepasGuests },
     };
   }, [breakdownFamilies]);
 
@@ -802,7 +807,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       </div>
 
       {/* 3. INTERACTIVE QUERY TABLE & SEARCH FILTERS */}
-      <div className="bg-white rounded-3xl border border-[#3B6FA0]/15 p-6 space-y-5 shadow-xs">
+      <div className="bg-white rounded-3xl border border-[#3B6FA0]/15 p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
@@ -830,41 +835,25 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
             </p>
           </div>
 
-          {/* Filter Toolbar */}
-          <div className="flex flex-wrap flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-4 md:mt-0 w-full md:w-auto">
+          {/* Filter Toolbar - Search & Response Status only */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
             {/* Search Input */}
-            <div className="relative w-full sm:w-auto">
+            <div className="relative w-full sm:w-52">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Chercher par nom..."
-                className="pl-8 pr-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none focus:border-[#C4A475] w-full sm:w-44"
+                className="pl-8 pr-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none focus:border-[#C4A475] w-full"
               />
             </div>
-
-            {/* Invitation Scope Filter */}
-            <select
-              value={filterInvitation}
-              onChange={(e: any) => setFilterInvitation(e.target.value)}
-              className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto font-medium"
-              title="Filtrer selon le périmètre d'invitation (Vin d'honneur, Dîner, Brunch)"
-            >
-              <option value="all">Toutes les invitations</option>
-              <option value="vin">🍸 Invités au Vin d'honneur</option>
-              <option value="repas">🍽️ Invités au Dîner (Repas)</option>
-              <option value="brunch">🥐 Invités au Brunch</option>
-              <option value="vin_only">🍸 Vin d'honneur seul</option>
-              <option value="repas_no_brunch">🍽️ Dîner sans Brunch</option>
-              <option value="all_three">👑 Tout (Vin + Dîner + Brunch)</option>
-            </select>
 
             {/* Status / Presence Filter */}
             <select
               value={filterStatus}
               onChange={(e: any) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto"
+              className="px-3 py-2 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto font-medium"
             >
               <option value="all">Tous statuts de réponse</option>
               <option value="attending">✅ Présents (au moins 1)</option>
@@ -875,30 +864,18 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
               <option value="attending_brunch">🥐 Présents au Brunch</option>
               <option value="dietary">🥗 Allergies / Régimes</option>
             </select>
-
-            {/* Host Filter */}
-            <select
-              value={filterHost}
-              onChange={(e: any) => setFilterHost(e.target.value)}
-              className="px-3 py-2 sm:py-1.5 bg-[#FAF7F2] border border-slate-200 rounded-xl text-xs text-[#13263B] focus:outline-none font-sans cursor-pointer w-full sm:w-auto font-medium"
-            >
-              <option value="all">Tous les hôtes</option>
-              <option value="Valentine&Jean">Valentine &amp; Jean</option>
-              <option value="Anny&Marc">Anny &amp; Marc</option>
-              <option value="Anne&Visith">Anne &amp; Visith</option>
-              <option value="unassigned">À catégoriser</option>
-            </select>
           </div>
         </div>
 
-        {/* Host Quick Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-100 pb-3">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">
+        {/* Host Quick Filter Pills - Mobile-friendly wrap & compact numbers */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pb-2.5 pt-0.5 border-b border-slate-100">
+          <span className="w-full sm:w-auto text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1 flex items-center gap-1">
+            <Users className="w-3 h-3 text-[#C4A475]" />
             Par hôte :
           </span>
           <button
             onClick={() => setFilterHost('all')}
-            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none touch-manipulation active:scale-95 ${
               filterHost === 'all'
                 ? 'bg-[#13263B] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -908,61 +885,64 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
           </button>
           <button
             onClick={() => setFilterHost(filterHost === 'Valentine&Jean' ? 'all' : 'Valentine&Jean')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
               filterHost === 'Valentine&Jean'
                 ? 'bg-[#13263B] text-white shadow-xs'
                 : 'bg-blue-50 text-[#13263B] border border-blue-200 hover:bg-blue-100'
             }`}
           >
             <span>Valentine &amp; Jean</span>
-            <span className="text-[10px] opacity-80 font-mono">({hostStats.vj.families} fam. / {hostStats.vj.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({hostStats.vj.families} fam. / {hostStats.vj.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({hostStats.vj.families})</span>
           </button>
           <button
             onClick={() => setFilterHost(filterHost === 'Anny&Marc' ? 'all' : 'Anny&Marc')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
               filterHost === 'Anny&Marc'
                 ? 'bg-rose-700 text-white shadow-xs'
                 : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
             }`}
           >
             <span>Anny &amp; Marc</span>
-            <span className="text-[10px] opacity-80 font-mono">({hostStats.am.families} fam. / {hostStats.am.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({hostStats.am.families} fam. / {hostStats.am.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({hostStats.am.families})</span>
           </button>
           <button
             onClick={() => setFilterHost(filterHost === 'Anne&Visith' ? 'all' : 'Anne&Visith')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
               filterHost === 'Anne&Visith'
                 ? 'bg-teal-700 text-white shadow-xs'
                 : 'bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100'
             }`}
           >
             <span>Anne &amp; Visith</span>
-            <span className="text-[10px] opacity-80 font-mono">({hostStats.av.families} fam. / {hostStats.av.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({hostStats.av.families} fam. / {hostStats.av.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({hostStats.av.families})</span>
           </button>
           {hostStats.unassigned.families > 0 && (
             <button
               onClick={() => setFilterHost(filterHost === 'unassigned' ? 'all' : 'unassigned')}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
                 filterHost === 'unassigned'
                   ? 'bg-amber-600 text-white shadow-xs'
                   : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
               }`}
             >
               <span>À catégoriser</span>
-              <span className="text-[10px] font-mono">({hostStats.unassigned.families} fam.)</span>
+              <span className="text-[10px] font-mono">({hostStats.unassigned.families})</span>
             </button>
           )}
         </div>
 
-        {/* Invitation Scope Quick Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-100 pb-3">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+        {/* Invitation Scope Quick Filter Pills - With VIN+DINER and Mobile-friendly wrap */}
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pb-2.5 pt-0.5 border-b border-slate-100">
+          <span className="w-full sm:w-auto text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1 flex items-center gap-1">
             <Utensils className="w-3 h-3 text-[#C4A475]" />
             Invités à :
           </span>
           <button
             onClick={() => setFilterInvitation('all')}
-            className={`px-3 py-1 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none touch-manipulation active:scale-95 ${
               filterInvitation === 'all'
                 ? 'bg-[#13263B] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -971,48 +951,69 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
             Toutes ({breakdownFamilies.length})
           </button>
           <button
-            onClick={() => setFilterInvitation(filterInvitation === 'vin' ? 'all' : 'vin')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              filterInvitation === 'vin'
-                ? 'bg-[#13263B] text-white shadow-xs'
-                : 'bg-blue-50 text-[#13263B] border border-blue-200 hover:bg-blue-100'
-            }`}
-          >
-            <span>🍸 Vin d'honneur</span>
-            <span className="text-[10px] opacity-80 font-mono">({invitationStats.vin.families} fam. / {invitationStats.vin.guests} pers.)</span>
-          </button>
-          <button
-            onClick={() => setFilterInvitation(filterInvitation === 'repas' ? 'all' : 'repas')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              filterInvitation === 'repas'
-                ? 'bg-[#C4A475] text-[#13263B] font-bold shadow-xs'
-                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
-            }`}
-          >
-            <span>🍽️ Dîner (Repas)</span>
-            <span className="text-[10px] opacity-80 font-mono">({invitationStats.repas.families} fam. / {invitationStats.repas.guests} pers.)</span>
-          </button>
-          <button
-            onClick={() => setFilterInvitation(filterInvitation === 'brunch' ? 'all' : 'brunch')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              filterInvitation === 'brunch'
-                ? 'bg-amber-700 text-white shadow-xs'
-                : 'bg-orange-50 text-amber-900 border border-orange-200 hover:bg-orange-100'
-            }`}
-          >
-            <span>🥐 Brunch</span>
-            <span className="text-[10px] opacity-80 font-mono">({invitationStats.brunch.families} fam. / {invitationStats.brunch.guests} pers.)</span>
-          </button>
-          <button
             onClick={() => setFilterInvitation(filterInvitation === 'vin_only' ? 'all' : 'vin_only')}
-            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
               filterInvitation === 'vin_only'
                 ? 'bg-indigo-700 text-white shadow-xs'
                 : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
             }`}
+            title="Invités uniquement au Vin d'honneur (sans dîner)"
           >
             <span>🍸 Vin seul</span>
-            <span className="text-[10px] opacity-80 font-mono">({invitationStats.vinOnly.families} fam. / {invitationStats.vinOnly.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({invitationStats.vinOnly.families} fam. / {invitationStats.vinOnly.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({invitationStats.vinOnly.families})</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'repas_no_brunch' ? 'all' : 'repas_no_brunch')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
+              filterInvitation === 'repas_no_brunch'
+                ? 'bg-[#13263B] text-white shadow-xs'
+                : 'bg-blue-50 text-[#13263B] border border-blue-200 hover:bg-blue-100'
+            }`}
+            title="Invités au Vin d'honneur et au Dîner (sans le Brunch du lendemain)"
+          >
+            <span>🍸🍽️ Vin + Dîner</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({invitationStats.vinRepas.families} fam. / {invitationStats.vinRepas.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({invitationStats.vinRepas.families})</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'brunch' ? 'all' : 'brunch')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
+              filterInvitation === 'brunch'
+                ? 'bg-amber-700 text-white shadow-xs'
+                : 'bg-orange-50 text-amber-900 border border-orange-200 hover:bg-orange-100'
+            }`}
+            title="Invités au Brunch du lendemain"
+          >
+            <span>🥐 Brunch</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({invitationStats.brunch.families} fam. / {invitationStats.brunch.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({invitationStats.brunch.families})</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'repas' ? 'all' : 'repas')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
+              filterInvitation === 'repas'
+                ? 'bg-[#C4A475] text-[#13263B] font-bold shadow-xs'
+                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+            }`}
+            title="Tous les invités au Dîner (avec ou sans Brunch)"
+          >
+            <span>🍽️ Dîner (total)</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({invitationStats.repas.families} fam. / {invitationStats.repas.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({invitationStats.repas.families})</span>
+          </button>
+          <button
+            onClick={() => setFilterInvitation(filterInvitation === 'vin' ? 'all' : 'vin')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 select-none touch-manipulation active:scale-95 ${
+              filterInvitation === 'vin'
+                ? 'bg-[#13263B] text-white shadow-xs'
+                : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+            }`}
+            title="Tous les invités au Vin d'honneur"
+          >
+            <span>🍸 Vin total</span>
+            <span className="text-[10px] opacity-80 font-mono hidden sm:inline">({invitationStats.vin.families} fam. / {invitationStats.vin.guests} pers.)</span>
+            <span className="text-[10px] opacity-80 font-mono sm:hidden">({invitationStats.vin.families})</span>
           </button>
         </div>
 
