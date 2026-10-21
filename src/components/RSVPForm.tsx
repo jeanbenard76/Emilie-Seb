@@ -369,7 +369,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   Merci infiniment !
                 </h3>
                 <p className="text-sm font-serif italic text-[#5A5040] max-w-md mx-auto">
-                  Votre réponse pour la {selectedFamily ? `Famille ${selectedFamily.familyName}` : 'famille'} a bien été enregistrée dans la base de données du mariage.
+                  Votre réponse pour la {selectedFamily ? `Famille ${selectedFamily.familyName}` : 'famille'} a bien été enregistrée.
                 </p>
               </div>
 
