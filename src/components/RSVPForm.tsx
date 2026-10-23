@@ -581,9 +581,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                         </span>
                       </p>
                       <p className="text-xs font-sans font-medium text-[#3B6FA0] mt-1.5">
-                        {restoredAnswers
-                          ? 'Vous pouvez encore modifier vos choix ci-dessous et enregistrer votre mise à jour.'
-                          : 'Pour protéger vos données, votre réponse précédente n’est pas réaffichée. Votre mise à jour la remplacera : pensez à indiquer de nouveau les éventuels régimes ou allergies.'}
+                        Vous pouvez encore modifier vos choix ci-dessous et enregistrer votre mise à jour.
                       </p>
                     </div>
                   </div>
@@ -980,21 +978,13 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Icône sobre */}
-              <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border border-[#C4A475]/40 mx-auto flex items-center justify-center text-[#C4A475]">
-                <Utensils className="w-5 h-5 text-[#C4A475]" />
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[10px] tracking-[0.25em] font-sans uppercase font-bold text-[#C4A475] block">
-                  Dimanche midi
-                </span>
+              <div className="space-y-2 pt-2">
                 <h4 className="font-display text-xl sm:text-2xl text-[#13263B] font-semibold">
                   Invitation au Brunch
                 </h4>
                 <div className="w-12 h-[1px] bg-[#C4A475]/50 mx-auto my-2" />
                 <p className="text-xs sm:text-sm font-sans text-[#5A5040] leading-relaxed pt-1">
-                  Rassurez-vous : vous êtes bien conviés au brunch du dimanche au Manoir d'Auffay, même si cela n'était pas précisé sur votre faire-part. Nous serons ravis de vous compter parmi nous pour prolonger ce moment !
+                  No worries ! Même si cela n'était pas précisé sur le faire-part, nous serions ravis de vous compter parmis nous au brunch du dimanche midi pour prolonger ce moment.
                 </p>
               </div>
 
