@@ -984,7 +984,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                 </h4>
                 <div className="w-12 h-[1px] bg-[#C4A475]/50 mx-auto my-2" />
                 <p className="text-xs sm:text-sm font-sans text-[#5A5040] leading-relaxed pt-1">
-                  No worries ! Même si cela n'était pas précisé sur le faire-part, nous serions ravis de vous compter parmis nous au brunch du dimanche midi pour prolonger ce moment.
+                  Pas d'inquiétude ! Même si cela n'était pas précisé sur le faire-part, nous serions ravis de vous compter parmi nous au brunch du dimanche midi pour prolonger ce moment.
                 </p>
               </div>
 
