@@ -132,6 +132,17 @@
     "personalNote": "Valentine se passionne pour les vinyles et débute sa collection, il ne reste plus qu'à pouvoir les écouter !"
   },
   {
+    "id": "cadeau-3642774",
+    "title": "Meuble vinyle vintage",
+    "description": "Meuble vinyle de 100cm pour accueillir la platine",
+    "targetAmount": 129.99,
+    "currentAmount": 0,
+    "category": "Appartement",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1792749667sstkb_595.jpeg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3642774.html",
+    "personalNote": "C'est le top d'avoir une platine, mais sans rangement, ça devient vite le bazar ! Ce meuble habillera parfaitement le mur de notre salle à manger."
+  },
+  {
     "id": "cadeau-3633661",
     "title": "Machine à crêpes",
     "description": "Appareil permettant de cuire simultanément 6 mini-crêpes ou pancakes     ",
