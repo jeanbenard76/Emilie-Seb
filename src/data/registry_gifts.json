@@ -207,5 +207,49 @@
     "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1791355495u1m4q_595.jpeg",
     "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3635821.html",
     "personalNote": "Pour transformer notre terrasse Montrougienne en guinguette estivale !"
+  },
+  {
+    "id": "cadeau-3642760",
+    "title": "Laser AdvancedLevel 2G",
+    "description": "Niveau laser avec 3 modes préprogrammés et son trépied.",
+    "targetAmount": 146.74,
+    "currentAmount": 0,
+    "category": "Travaux Montrouge",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1792738119pq41j_595.png",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3642760.html",
+    "personalNote": "Afin d'éviter d'avoir des assiettes qui glissent dans notre nouvelle cuisine, ce laser nous permettra de travailler avec précision sans difficulté!"
+  },
+  {
+    "id": "cadeau-3642762",
+    "title": "Scie à Onglet",
+    "description": "Scie à onglet radiale Parkside",
+    "targetAmount": 77,
+    "currentAmount": 0,
+    "category": "Travaux Montrouge",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/1792738235xbz89_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3642762.html",
+    "personalNote": "64m² de parquet à venir, bientôt facilité par cette super scie!"
+  },
+  {
+    "id": "cadeau-3642763",
+    "title": "Ponceuse multifonction",
+    "description": "Ponceuse multifonction Parkside",
+    "targetAmount": 23.99,
+    "currentAmount": 0,
+    "category": "Travaux Montrouge",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/17927382739m3dj_595.jpg",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3642763.html",
+    "personalNote": "Pour finaliser nos travaux et apporter la dernière touches aux rénovations, cette ponceuse sera parfaite"
+  },
+  {
+    "id": "cadeau-3642761",
+    "title": "Set Appareil multifonction",
+    "description": "Visseuse-perceuse et outil multifonction Parkside",
+    "targetAmount": 57.99,
+    "currentAmount": 0,
+    "category": "Travaux Montrouge",
+    "imageUrl": "https://www.millemercismariage.com/uploads/photos/cadeaux/2026/335729/17927381688wjqs_595.png",
+    "actionUrl": "https://www.millemercismariage.com/valentineetjean/liste/cadeau-3642761.html",
+    "personalNote": "Aucun travaux ne peut être réalisé sans un bon set d'appareil multifonction pour tout faire... Alors le voici !"
   }
 ]

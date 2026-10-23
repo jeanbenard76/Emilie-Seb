@@ -30,7 +30,18 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showNoEmailModal, setShowNoEmailModal] = useState(false);
+  const [showBrunchModal, setShowBrunchModal] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
+
+  // Fermer la pop-up brunch avec la touche Échap
+  useEffect(() => {
+    if (!showBrunchModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowBrunchModal(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showBrunchModal]);
 
   // Admin dashboard state
   const [showAdmin, setShowAdmin] = useState(false);
@@ -125,6 +136,12 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
 
     setMembers(sanitizedMembers);
     setShowSuggestions(false);
+
+    // Si la famille est invitée au brunch, afficher la pop-up sobre d'information
+    const isInvitedToBrunch = sanitizedMembers.some((m) => Boolean(m.invitedTo?.brunchLendemain));
+    if (isInvitedToBrunch) {
+      setShowBrunchModal(true);
+    }
   };
 
   // Start fresh manual family input if name not found in DB
@@ -442,6 +459,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   setEmail('');
                   setMessage('');
                   setSubmittedEmail('');
+                  setShowBrunchModal(false);
                 }}
                 className="px-6 py-2.5 border border-[#13263B]/30 hover:border-[#13263B] text-[#13263B] text-xs uppercase tracking-wider font-semibold rounded-full transition-all cursor-pointer"
               >
@@ -470,6 +488,7 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                         setMembers([]);
                         setEmail('');
                         setMessage('');
+                        setShowBrunchModal(false);
                       }
                     }}
                     onFocus={() => setShowSuggestions(true)}
@@ -929,6 +948,63 @@ export default function RSVPForm({ onNavigateToContact }: RSVPFormProps) {
                   className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-semibold text-xs uppercase tracking-wide transition-all cursor-pointer shadow-xs whitespace-nowrap shrink-0"
                 >
                   Continuer sans email
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* POPUP INFORMATION INVITATION AU BRUNCH */}
+      <AnimatePresence>
+        {showBrunchModal && (
+          <div
+            className="fixed inset-0 bg-[#13263B]/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+            onClick={() => setShowBrunchModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-[#C4A475]/30 text-center space-y-5 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Bouton fermeture */}
+              <button
+                type="button"
+                onClick={() => setShowBrunchModal(false)}
+                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-[#13263B] rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Icône sobre */}
+              <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border border-[#C4A475]/40 mx-auto flex items-center justify-center text-[#C4A475]">
+                <Utensils className="w-5 h-5 text-[#C4A475]" />
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] tracking-[0.25em] font-sans uppercase font-bold text-[#C4A475] block">
+                  Dimanche midi
+                </span>
+                <h4 className="font-display text-xl sm:text-2xl text-[#13263B] font-semibold">
+                  Invitation au Brunch
+                </h4>
+                <div className="w-12 h-[1px] bg-[#C4A475]/50 mx-auto my-2" />
+                <p className="text-xs sm:text-sm font-sans text-[#5A5040] leading-relaxed pt-1">
+                  Rassurez-vous : vous êtes bien conviés au brunch du dimanche au Manoir d'Auffay, même si cela n'était pas précisé sur votre faire-part. Nous serons ravis de vous compter parmi nous pour prolonger ce moment !
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowBrunchModal(false)}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B] text-white font-sans font-semibold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                >
+                  C'est noté
                 </button>
               </div>
             </motion.div>
