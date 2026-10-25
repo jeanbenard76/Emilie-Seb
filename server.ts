@@ -25,6 +25,7 @@ import {
   addContactMessage,
   getAllContactMessages,
   clearAllContactMessages,
+  updateMemberWeddingNote,
 } from "./server/db";
 import {
   sendRSVPNotificationEmail,
@@ -124,10 +125,15 @@ async function startServer() {
       let families = getAllFamiliesWithMembers();
 
       // Si l'utilisateur n'a pas accès complet, on masque le mot optionnel (lastMessage)
+      // et le mot des mariés pour chacun des membres
       if (!(req as any).isAdminFull) {
         families = families.map((fam: any) => ({
           ...fam,
           lastMessage: "",
+          members: (fam.members || []).map((m: any) => ({
+            ...m,
+            weddingNote: "",
+          })),
         }));
       }
 
@@ -432,6 +438,15 @@ async function startServer() {
       const allFamilies = getAllFamiliesWithMembers();
       const hostParam = (req.query.host as string) || "all";
 
+      // Si l'export est demandé avec un token restreint, masquer les mots des mariés
+      if (!(req as any).isAdminFull) {
+        allFamilies.forEach((fam: any) => {
+          (fam.members || []).forEach((m: any) => {
+            m.weddingNote = "";
+          });
+        });
+      }
+
       const OFFICIAL_HOSTS: Record<string, string> = {
         "Valentine&Jean": "Valentine & Jean",
         "Anny&Marc": "Anny & Marc",
@@ -573,6 +588,24 @@ async function startServer() {
     } catch (err: any) {
       console.error("Erreur génération emails récapitulatifs par hôte:", err);
       res.status(500).json({ error: err.message || "Erreur serveur lors de l'envoi des emails." });
+    }
+  });
+
+  // Update wedding note for a single guest member (bride & groom letter note) - full admin only
+  app.put("/api/admin/members/:id/wedding-note", requireAdmin, (req, res) => {
+    try {
+      if (!(req as any).isAdminFull) {
+        return res.status(403).json({ error: "Accès réservé au mot de passe complet (ADMIN_FULL_TOKEN)." });
+      }
+      const memberId = req.params.id;
+      const { weddingNote } = req.body;
+      if (typeof weddingNote !== "string") {
+        return res.status(400).json({ error: "Le champ weddingNote doit être une chaîne de caractères." });
+      }
+      const result = updateMemberWeddingNote(memberId, weddingNote);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
   });
 

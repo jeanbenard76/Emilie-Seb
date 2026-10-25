@@ -7,7 +7,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Database, Download, FileSpreadsheet, ShieldCheck, RefreshCw, Search, Users, Baby, Utensils, MessageSquare, Check, X, ArrowLeft, Trash2, Edit2, Mail } from 'lucide-react';
 import ChildIcon from './ChildIcon';
-import { GuestFamily, RSVPStats } from '../types';
+import { GuestFamily, RSVPStats, FamilyMember } from '../types';
 import { getStoredFamilies, clearLocalStorageRSVPs } from '../utils/rsvpStorage';
 import AdminAddFamily from './AdminAddFamily';
 import AdminEditFamilyModal from './AdminEditFamilyModal';
@@ -108,7 +108,7 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<
-    'all' | 'attending' | 'pending' | 'absent' | 'dietary' | 'attending_vin' | 'attending_repas' | 'attending_brunch'
+    'all' | 'attending' | 'pending' | 'absent' | 'dietary' | 'attending_vin' | 'attending_repas' | 'attending_brunch' | 'letters_missing' | 'letters_done'
   >('all');
   const [filterInvitation, setFilterInvitation] = useState<
     'all' | 'vin' | 'repas' | 'brunch' | 'vin_only' | 'repas_no_brunch' | 'all_three'
@@ -118,6 +118,10 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
   const [editingFamily, setEditingFamily] = useState<GuestFamily | null>(null);
   const [sendingRecap, setSendingRecap] = useState(false);
   const [canSeeOptionalNotes, setCanSeeOptionalNotes] = useState(false);
+  const [editingNoteMember, setEditingNoteMember] = useState<{ member: FamilyMember; familyName: string; familyId: string } | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [noteSaveSuccess, setNoteSaveSuccess] = useState(false);
 
   // Authentication gate: null = checking, true = dashboard (native browser prompt)
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -307,6 +311,63 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       alert("❌ Erreur réseau lors de la génération des emails.");
     } finally {
       setSendingRecap(false);
+    }
+  };
+
+  const isMemberAttendingDinner = (m: FamilyMember) => {
+    const invitedRepas = isMemberInvitedToRepas(m);
+    return Boolean(m.isAttending && (m.events?.repasNoces ?? invitedRepas));
+  };
+
+  const dinnerConfirmedMembers = useMemo(() => {
+    return families.flatMap((f) => f.members).filter((m) => isMemberAttendingDinner(m));
+  }, [families]);
+
+  const lettersWrittenCount = useMemo(() => {
+    return dinnerConfirmedMembers.filter((m) => Boolean(m.weddingNote && m.weddingNote.trim())).length;
+  }, [dinnerConfirmedMembers]);
+
+  const lettersMissingCount = Math.max(0, dinnerConfirmedMembers.length - lettersWrittenCount);
+
+  const handleSaveWeddingNote = async () => {
+    if (!editingNoteMember) return;
+    setSavingNote(true);
+    try {
+      const res = await fetch(`/api/admin/members/${editingNoteMember.member.id}/wedding-note`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...adminHeaders(),
+        },
+        body: JSON.stringify({ weddingNote: noteText }),
+      });
+      if (res.ok) {
+        setFamilies((prev) =>
+          prev.map((f) => {
+            if (f.id === editingNoteMember.familyId) {
+              return {
+                ...f,
+                members: f.members.map((m) =>
+                  m.id === editingNoteMember.member.id ? { ...m, weddingNote: noteText.trim() } : m
+                ),
+              };
+            }
+            return f;
+          })
+        );
+        setNoteSaveSuccess(true);
+        setTimeout(() => {
+          setNoteSaveSuccess(false);
+          setEditingNoteMember(null);
+        }, 800);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Erreur lors de l'enregistrement du mot.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Erreur réseau.");
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -570,6 +631,8 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
       if (filterStatus === 'attending_vin' && !fam.members.some((m) => m.isAttending && m.events?.vinHonneur)) return false;
       if (filterStatus === 'attending_repas' && !fam.members.some((m) => m.isAttending && m.events?.repasNoces)) return false;
       if (filterStatus === 'attending_brunch' && !fam.members.some((m) => m.isAttending && m.events?.brunchLendemain)) return false;
+      if (filterStatus === 'letters_missing' && !fam.members.some((m) => isMemberAttendingDinner(m) && (!m.weddingNote || !m.weddingNote.trim()))) return false;
+      if (filterStatus === 'letters_done' && !fam.members.some((m) => Boolean(m.weddingNote && m.weddingNote.trim()))) return false;
 
       return true;
     });
@@ -863,6 +926,12 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
               <option value="attending_repas">🍽️ Présents au Dîner</option>
               <option value="attending_brunch">🥐 Présents au Brunch</option>
               <option value="dietary">🥗 Allergies / Régimes</option>
+              {canSeeOptionalNotes && (
+                <>
+                  <option value="letters_missing">✉️ Lettres dîner : non rédigées</option>
+                  <option value="letters_done">💌 Lettres dîner : rédigées</option>
+                </>
+              )}
             </select>
           </div>
         </div>
@@ -1016,6 +1085,68 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
             <span className="text-[10px] opacity-80 font-mono sm:hidden">({invitationStats.vin.families})</span>
           </button>
         </div>
+
+        {/* Wedding Dinner Letters Summary Banner - Visible only for full admin */}
+        {canSeeOptionalNotes && (
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-gradient-to-r from-amber-50/80 via-white to-rose-50/80 rounded-2xl border border-[#C4A475]/35 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl select-none">💌</span>
+              <div>
+                <span className="text-xs font-bold text-[#13263B] block">
+                  Mots des mariés pour les lettres personnalisées du dîner
+                </span>
+                <span className="text-[11px] text-[#5A5040] font-serif italic">
+                  <strong>{lettersWrittenCount}</strong> rédigé(s) sur <strong>{dinnerConfirmedMembers.length}</strong> invité(s) confirmé(s) au dîner
+                  {lettersMissingCount > 0 ? (
+                    <span className="text-rose-700 font-semibold not-italic ml-1">
+                      ({lettersMissingCount} lettre{lettersMissingCount > 1 ? 's' : ''} à rédiger)
+                    </span>
+                  ) : (
+                    <span className="text-emerald-700 font-semibold not-italic ml-1">
+                      — Toutes les lettres sont prêtes ! 🎉
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => setFilterStatus(filterStatus === 'letters_missing' ? 'all' : 'letters_missing')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 select-none touch-manipulation active:scale-95 ${
+                  filterStatus === 'letters_missing'
+                    ? 'bg-rose-700 text-white shadow-xs'
+                    : lettersMissingCount > 0
+                    ? 'bg-rose-50 text-rose-800 border border-rose-300 hover:bg-rose-100'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+                title="Afficher uniquement les invités venant au dîner sans mot rédigé"
+              >
+                <span>✉️ À rédiger</span>
+                <span className={`font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                  filterStatus === 'letters_missing' ? 'bg-white/20 text-white' : 'bg-rose-200 text-rose-900'
+                }`}>
+                  {lettersMissingCount}
+                </span>
+              </button>
+              <button
+                onClick={() => setFilterStatus(filterStatus === 'letters_done' ? 'all' : 'letters_done')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 select-none touch-manipulation active:scale-95 ${
+                  filterStatus === 'letters_done'
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                }`}
+                title="Afficher les invités dont le mot des mariés est déjà rédigé"
+              >
+                <span>✓ Rédigées</span>
+                <span className={`font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                  filterStatus === 'letters_done' ? 'bg-white/20 text-white' : 'bg-emerald-200 text-emerald-900'
+                }`}>
+                  {lettersWrittenCount}
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Query Results Cards List */}
         <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
@@ -1210,6 +1341,63 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
                           <div className="mt-1 text-[10px] text-amber-900 bg-amber-50 p-1.5 rounded border border-amber-200 flex items-center gap-1">
                             <Utensils className="w-3 h-3 shrink-0 text-amber-700" />
                             <span><strong>Régime :</strong> {m.dietaryNotes}</span>
+                          </div>
+                        )}
+
+                        {/* Mot des mariés pour la lettre du dîner — Visible uniquement pour ADMIN_FULL_TOKEN */}
+                        {canSeeOptionalNotes && (
+                          <div className="mt-2 pt-2 border-t border-slate-100">
+                            {m.weddingNote && m.weddingNote.trim() ? (
+                              <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-[#C4A475]/35 space-y-1">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="font-serif italic font-semibold text-[#13263B] text-[11px] flex items-center gap-1.5">
+                                    <span>💌 Mot des mariés (lettre) :</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingNoteMember({ member: m, familyName: fam.familyName, familyId: fam.id });
+                                      setNoteText(m.weddingNote || '');
+                                    }}
+                                    className="text-[10px] text-[#3B6FA0] hover:text-[#13263B] font-semibold underline cursor-pointer"
+                                  >
+                                    Modifier
+                                  </button>
+                                </div>
+                                <p className="font-serif italic text-slate-700 whitespace-pre-line text-xs leading-relaxed">
+                                  « {m.weddingNote} »
+                                </p>
+                              </div>
+                            ) : isMemberAttendingDinner(m) ? (
+                              <div className="bg-rose-50/90 p-2 rounded-xl border border-rose-200 flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-semibold text-rose-700 flex items-center gap-1">
+                                  <span>⚠️ Mot lettre dîner non rédigé</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingNoteMember({ member: m, familyName: fam.familyName, familyId: fam.id });
+                                    setNoteText('');
+                                  }}
+                                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer shadow-2xs shrink-0"
+                                >
+                                  + Rédiger le mot
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingNoteMember({ member: m, familyName: fam.familyName, familyId: fam.id });
+                                    setNoteText('');
+                                  }}
+                                  className="text-[10px] text-slate-400 hover:text-[#C4A475] italic cursor-pointer flex items-center gap-1 hover:underline"
+                                >
+                                  + Ajouter un mot des mariés
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1416,6 +1604,111 @@ export default function SecretAdminDashboard({ onBackToHome }: SecretAdminDashbo
           }}
           adminHeaders={adminHeaders}
         />
+      )}
+
+      {/* Modal d'édition du Mot des mariés (accessible uniquement avec ADMIN_FULL_TOKEN) */}
+      {editingNoteMember && (
+        <div className="fixed inset-0 bg-[#13263B]/70 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative text-left my-auto flex flex-col border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+            <div className="h-1.5 bg-gradient-to-r from-[#13263B] via-[#C4A475] to-[#13263B] shrink-0" />
+            
+            <div className="p-5 sm:p-6 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span className="text-[10px] tracking-widest uppercase font-serif font-bold text-[#C4A475] block mb-0.5">
+                    Lettre personnalisée du dîner
+                  </span>
+                  <h4 className="font-display text-xl text-[#13263B] font-bold">
+                    {editingNoteMember.member.firstName} {editingNoteMember.member.lastName}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-slate-500 font-sans">
+                      Famille {editingNoteMember.familyName}
+                    </span>
+                    {isMemberAttendingDinner(editingNoteMember.member) ? (
+                      <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        🍽️ Confirmé au dîner
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                        {editingNoteMember.member.isAttending ? '✓ Présent' : '⏳ Non confirmé'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingNoteMember(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-xs text-[#5A5040] font-serif italic">
+                Ce mot apparaîtra dans la dernière colonne de l'export Excel du vendredi pour imprimer votre lettre de table personnalisée.
+              </p>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Mot des mariés :
+                </label>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  rows={5}
+                  placeholder="Ex : Chère Éloïse, quel bonheur de t'avoir parmi nous pour célébrer notre mariage ! Un immense merci pour ton soutien et ta présence à notre table..."
+                  className="w-full p-3 text-xs text-[#13263B] font-sans border border-slate-300 rounded-xl focus:outline-none focus:border-[#C4A475] focus:ring-1 focus:ring-[#C4A475] bg-[#FAF7F2] resize-y leading-relaxed"
+                  autoFocus
+                />
+                <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1">
+                  <span>{noteText.trim().split(/\s+/).filter(Boolean).length} mot(s)</span>
+                  <span>{noteText.length} caractère(s)</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                {noteText.trim() ? (
+                  <button
+                    type="button"
+                    onClick={() => setNoteText('')}
+                    className="text-xs text-rose-600 hover:text-rose-800 font-medium cursor-pointer"
+                  >
+                    Effacer le mot
+                  </button>
+                ) : <span />}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingNoteMember(null)}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-[#13263B] bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveWeddingNote}
+                    disabled={savingNote}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                      noteSaveSuccess
+                        ? 'bg-emerald-600'
+                        : 'bg-[#13263B] hover:bg-[#C4A475] hover:text-[#13263B]'
+                    }`}
+                  >
+                    {savingNote ? (
+                      <span>Enregistrement...</span>
+                    ) : noteSaveSuccess ? (
+                      <span>✓ Enregistré !</span>
+                    ) : (
+                      <span>Enregistrer le mot</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

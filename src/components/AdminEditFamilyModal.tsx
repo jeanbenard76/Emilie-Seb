@@ -24,7 +24,8 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
       invitedVin: m.invitedTo?.vinHonneur ?? true,
       invitedRepas: m.invitedTo?.repasNoces ?? true,
       invitedBrunch: m.invitedTo?.brunchLendemain ?? true,
-      dietaryNotes: m.dietaryNotes || ''
+      dietaryNotes: m.dietaryNotes || '',
+      weddingNote: m.weddingNote || ''
     }))
   );
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +42,8 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
       invitedVin: true, 
       invitedRepas: true, 
       invitedBrunch: true,
-      dietaryNotes: ''
+      dietaryNotes: '',
+      weddingNote: ''
     }]);
   };
 
@@ -89,7 +91,8 @@ export default function AdminEditFamilyModal({ family, onClose, onSuccess, admin
             repasNoces: m.invitedRepas,
             brunchLendemain: m.invitedBrunch
           },
-          dietaryNotes: m.dietaryNotes
+          dietaryNotes: m.dietaryNotes,
+          weddingNote: m.weddingNote || existingMember?.weddingNote || ''
         };
       })
     };

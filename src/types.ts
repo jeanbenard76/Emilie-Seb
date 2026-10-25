@@ -44,6 +44,7 @@ export interface FamilyMember {
     brunchLendemain: boolean;
   };
   dietaryNotes?: string;
+  weddingNote?: string;
 }
 
 export type Inviter = 'Valentine&Jean' | 'Anny&Marc' | 'Anne&Visith';

@@ -93,6 +93,7 @@ export async function initDatabase(): Promise<Database> {
   try { db.run('ALTER TABLE members ADD COLUMN invited_repas INTEGER DEFAULT 1'); } catch (e) {}
   try { db.run('ALTER TABLE members ADD COLUMN invited_brunch INTEGER DEFAULT 1'); } catch (e) {}
   try { db.run('ALTER TABLE members ADD COLUMN is_baby INTEGER DEFAULT 0'); } catch (e) {}
+  try { db.run('ALTER TABLE members ADD COLUMN wedding_note TEXT'); } catch (e) {}
 
   // Sync initial invitation scopes for pre-seeded families in existing database
   syncInitialInvitations(db);
@@ -181,6 +182,7 @@ export function getAllFamiliesWithMembers() {
             brunchLendemain: Boolean(mObj.brunch_lendemain),
           },
           dietaryNotes: mObj.dietary_notes || '',
+          weddingNote: mObj.wedding_note || '',
         };
       });
     }
@@ -494,6 +496,15 @@ export function addFamilies(families: any[]) {
       [famId, fam.familyName, fam.email || '', fam.invitedBy || null]
     );
 
+    // Récupérer les mots des mariés existants pour ne pas les écraser lors d'un réimport
+    const existingNotes = new Map<string, string>();
+    const prev = db.exec("SELECT id, wedding_note FROM members WHERE family_id = ?", [famId]);
+    if (prev.length && prev[0].values) {
+      for (const row of prev[0].values) {
+        if (row[0] && row[1]) existingNotes.set(String(row[0]), String(row[1]));
+      }
+    }
+
     // Delete existing members so we don't create duplicates on re-import
     db.run("DELETE FROM members WHERE family_id = ?", [famId]);
 
@@ -510,11 +521,12 @@ export function addFamilies(families: any[]) {
       const vin = (invVin && m.events?.vinHonneur) ? 1 : 0;
       const repas = (invRepas && m.events?.repasNoces) ? 1 : 0;
       const brunch = (invBrunch && m.events?.brunchLendemain) ? 1 : 0;
+      const note = m.weddingNote !== undefined ? m.weddingNote : (existingNotes.get(memId) || '');
       
       db.run(
-        `INSERT INTO members (id, family_id, first_name, last_name, is_child, is_baby, age, is_attending, invited_vin, invited_repas, invited_brunch, vin_honneur, repas_noces, brunch_lendemain, dietary_notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [memId, famId, m.firstName, m.lastName, m.isChild ? 1 : 0, m.isBaby ? 1 : 0, m.age || null, isAttending, invVin, invRepas, invBrunch, vin, repas, brunch, m.dietaryNotes || '']
+        `INSERT INTO members (id, family_id, first_name, last_name, is_child, is_baby, age, is_attending, invited_vin, invited_repas, invited_brunch, vin_honneur, repas_noces, brunch_lendemain, dietary_notes, wedding_note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [memId, famId, m.firstName, m.lastName, m.isChild ? 1 : 0, m.isBaby ? 1 : 0, m.age || null, isAttending, invVin, invRepas, invBrunch, vin, repas, brunch, m.dietaryNotes || '', note]
       );
     }
     
@@ -549,6 +561,15 @@ export function updateFamily(familyId: string, familyData: any) {
     familyData.invitedBy || null,
     familyId
   ]);
+  // Récupérer les mots des mariés existants pour ne pas les écraser lors de la mise à jour
+  const existingNotes = new Map<string, string>();
+  const prev = db.exec("SELECT id, wedding_note FROM members WHERE family_id = ?", [familyId]);
+  if (prev.length && prev[0].values) {
+    for (const row of prev[0].values) {
+      if (row[0] && row[1]) existingNotes.set(String(row[0]), String(row[1]));
+    }
+  }
+
   db.run("DELETE FROM members WHERE family_id = ?", [familyId]);
   for (const m of familyData.members) {
       const memId = m.id || `m-custom-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -559,14 +580,25 @@ export function updateFamily(familyId: string, familyData: any) {
       const vin = (invVin && m.events?.vinHonneur) ? 1 : 0;
       const repas = (invRepas && m.events?.repasNoces) ? 1 : 0;
       const brunch = (invBrunch && m.events?.brunchLendemain) ? 1 : 0;
+      const note = m.weddingNote !== undefined ? m.weddingNote : (existingNotes.get(memId) || '');
       db.run(
-        `INSERT INTO members (id, family_id, first_name, last_name, is_child, is_baby, age, is_attending, invited_vin, invited_repas, invited_brunch, vin_honneur, repas_noces, brunch_lendemain, dietary_notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [memId, familyId, m.firstName, m.lastName, m.isChild ? 1 : 0, m.isBaby ? 1 : 0, m.age || null, isAttending, invVin, invRepas, invBrunch, vin, repas, brunch, m.dietaryNotes || '']
+        `INSERT INTO members (id, family_id, first_name, last_name, is_child, is_baby, age, is_attending, invited_vin, invited_repas, invited_brunch, vin_honneur, repas_noces, brunch_lendemain, dietary_notes, wedding_note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [memId, familyId, m.firstName, m.lastName, m.isChild ? 1 : 0, m.isBaby ? 1 : 0, m.age || null, isAttending, invVin, invRepas, invBrunch, vin, repas, brunch, m.dietaryNotes || '', note]
       );
   }
   saveDatabaseToDisk();
   return { success: true };
+}
+
+/**
+ * Update personal wedding note for a single member (used by full admin for dinner letters).
+ */
+export function updateMemberWeddingNote(memberId: string, weddingNote: string) {
+  if (!db) throw new Error('Database not initialized');
+  db.run("UPDATE members SET wedding_note = ? WHERE id = ?", [weddingNote.trim(), memberId]);
+  saveDatabaseToDisk();
+  return { success: true, memberId, weddingNote: weddingNote.trim() };
 }
 
 /**

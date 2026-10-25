@@ -688,6 +688,7 @@ export async function generateHostRecapExcel(hostLabel: string, families: any[],
     { header: "Régime / Allergies", key: "regime", width: 30 },
     { header: "Email de contact", key: "email", width: 28 },
     { header: "Date réponse", key: "date", width: 22 },
+    { header: "Mot des mariés (lettre)", key: "motMaries", width: 38 },
   ];
 
   wsInvites.columns = columns;
@@ -780,6 +781,20 @@ export async function generateHostRecapExcel(hostLabel: string, families: any[],
       const isFirstNameEmpty = firstNameVal.length === 0;
       const isLastNameEmpty = lastNameVal.length === 0;
 
+      const weddingNoteVal = (m.weddingNote || "").trim();
+      const hasWeddingNote = weddingNoteVal.length > 0;
+
+      // Un invité venant au dîner (Repas de Noces = Présent) ou déclaré présent au mariage (sans être absent au repas)
+      const isPresentAtDinner = presenceRepas === "Présent" || (statutReponse === "Présent" && presenceRepas !== "Absent" && presenceRepas !== "Non invité");
+      const isMissingDinnerNote = isPresentAtDinner && !hasWeddingNote;
+
+      let displayNote = "-";
+      if (hasWeddingNote) {
+        displayNote = weddingNoteVal;
+      } else if (isMissingDinnerNote) {
+        displayNote = "À rédiger";
+      }
+
       const rowValues = {
         famille: fam.familyName || "-",
         prenom: firstNameVal,
@@ -792,6 +807,7 @@ export async function generateHostRecapExcel(hostLabel: string, families: any[],
         regime: m.dietaryNotes && m.dietaryNotes.trim() ? m.dietaryNotes.trim() : "-",
         email: fam.email ? fam.email : "-",
         date: fam.respondedAt ? fam.respondedAt : "-",
+        motMaries: displayNote,
       };
 
       const row = wsInvites.addRow(rowValues);
@@ -908,6 +924,36 @@ export async function generateHostRecapExcel(hostLabel: string, families: any[],
         } else if (colNumber === 11) {
           // Date réponse
           cell.alignment = { vertical: "middle", horizontal: "center" };
+        } else if (colNumber === 12) {
+          // Mot des mariés (dernière colonne à droite)
+          cell.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+          if (isMissingDinnerNote) {
+            // Si présent mais sans mot : ressort en rouge
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFEE2E2" }, // Fond rouge clair
+            };
+            cell.font = {
+              name: "Calibri",
+              size: 10.5,
+              bold: false,
+              italic: true,
+              color: { argb: "FF991B1B" }, // Texte rouge foncé
+            };
+            cell.border = {
+              ...defaultBorder,
+              left: { style: "thin", color: { argb: "FFF87171" } },
+              right: { style: "thin", color: { argb: "FFF87171" } },
+            };
+          } else if (hasWeddingNote) {
+            cell.font = {
+              name: "Calibri",
+              size: 10.5,
+              bold: false,
+              color: { argb: "FF0F172A" },
+            };
+          }
         }
       });
     });
