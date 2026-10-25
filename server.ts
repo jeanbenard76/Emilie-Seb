@@ -308,6 +308,7 @@ async function startServer() {
   // Get registry gifts JSON data (scraped / updated periodically from Millemercis)
   app.get("/api/registry", (req, res) => {
     try {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       const jsonPath = path.join(process.cwd(), "src", "data", "registry_gifts.json");
       if (fs.existsSync(jsonPath)) {
         const data = fs.readFileSync(jsonPath, "utf-8");
@@ -606,19 +607,56 @@ async function startServer() {
               const res = await fetch(gift.actionUrl, {
                 headers: {
                   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                }
+                },
+                signal: AbortSignal.timeout(10000)
               });
               const html = await res.text();
-              const match = html.match(/Reste.*?offrir.*?:\s*([\d\s]+(?:,\d+)?)/i);
-              if (match) {
-                const remainingStr = match[1].replace(/\s/g, "").replace(",", ".");
-                const remaining = parseFloat(remainingStr);
-                if (!isNaN(remaining)) {
-                  const newCurrentAmount = Math.max(0, gift.targetAmount - remaining);
-                  if (gift.currentAmount !== newCurrentAmount) {
-                    gift.currentAmount = newCurrentAmount;
-                    updated = true;
+
+              let remaining: number | null = null;
+
+              // 1. Détection cadeau entièrement offert (classe prod-offred, texte "entièrement offert", badge "offred")
+              if (
+                /entièrement offert/i.test(html) ||
+                /prod-offred/i.test(html) ||
+                /class=["']offred["']>Offert</i.test(html)
+              ) {
+                remaining = 0;
+              }
+
+              // 2. Détection via l'attribut HTML data-resteaoffrir="..."
+              if (remaining === null) {
+                const dataAttrMatch = html.match(/data-resteaoffrir=["']([\d.,]+)["']/i);
+                if (dataAttrMatch) {
+                  const parsed = parseFloat(dataAttrMatch[1].replace(",", "."));
+                  if (!isNaN(parsed)) {
+                    remaining = parsed;
                   }
+                }
+              }
+
+              // 3. Fallback sur le texte 'Reste à offrir : ...'
+              if (remaining === null) {
+                const textMatch = html.match(/Reste.*?offrir.*?:\s*([\d\s]+(?:[.,]\d+)?)/i);
+                if (textMatch) {
+                  const parsed = parseFloat(textMatch[1].replace(/\s/g, "").replace(",", "."));
+                  if (!isNaN(parsed)) {
+                    remaining = parsed;
+                  }
+                }
+              }
+
+              if (remaining !== null && !isNaN(remaining)) {
+                let newCurrentAmount: number;
+                if (remaining <= 0) {
+                  newCurrentAmount = gift.targetAmount;
+                } else {
+                  newCurrentAmount = Math.max(0, Math.round((gift.targetAmount - remaining) * 100) / 100);
+                }
+
+                if (gift.currentAmount !== newCurrentAmount) {
+                  console.log(`[Sync Millemercis] Mise à jour pour "${gift.title}": ${gift.currentAmount} € -> ${newCurrentAmount} € (reste: ${remaining} €)`);
+                  gift.currentAmount = newCurrentAmount;
+                  updated = true;
                 }
               }
             } catch (err) {
@@ -637,9 +675,9 @@ async function startServer() {
     }
   };
 
-  // Lancement initial de la synchro puis toutes les 15 minutes
+  // Lancement initial de la synchro puis toutes les 2 minutes
   syncMillemercis();
-  setInterval(syncMillemercis, 15 * 60 * 1000);
+  setInterval(syncMillemercis, 2 * 60 * 1000);
 
   // --- Bot Récapitulatif Hebdomadaire (Vendredi à 20h00, heure de Paris) ---
   let lastRecapExecutionDate = "";
